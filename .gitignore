@@ -18,5 +18,6 @@ build/
 # Keep service account credentials out of GitHub.
 sa.json
 service-account*.json
+agency-mapping-tool-*.json
 *.credentials.json
 .env
