@@ -1,0 +1,22 @@
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+
+.venv/
+venv/
+env/
+
+.DS_Store
+
+out/
+dist/
+build/
+
+# Keep service account credentials out of GitHub.
+sa.json
+service-account*.json
+*.credentials.json
+.env

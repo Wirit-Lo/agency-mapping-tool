@@ -1,0 +1,54 @@
+﻿#ReplaceWebObjectsBegin -l /Configurations/EGA/EGAAgency/LookupData/
+<Object:<Path:/Configurations/EGA/EGAAgency/LookupData/TopUpServiceType>><Contents:<Data:<LookupMethod:TopUpServiceType><Caption:ประเภทเงิน><DisplayMode:DropDown><AllowNone:1>>>
+<Object:<Path:/Configurations/EGA/EGAAgency/LookupData/Title>><Contents:<Data:<LookupMethod:Title><Caption:คำนำหน้าชื่อ><DisplayMode:DropDown><AllowNone:1>>>
+<Object:<Path:/Configurations/EGA/EGAAgency/LookupData/AuthorizationType42>><Contents:<Data:<LookupMethod:AuthorizationType42><Caption:ประเภทใบอนุญาต><DisplayMode:DropDown><AllowNone:1>>>
+<Object:<Path:/Configurations/EGA/EGAAgency/LookupData/AuthorizationType28>><Contents:<Data:<LookupMethod:AuthorizationType28><Caption:ประเภทใบอนุญาต><DisplayMode:DropDown><AllowNone:1>>>
+<Object:<Path:/Configurations/EGA/EGAAgency/LookupData/DemandCode>><Contents:<Data:<LookupMethod:DemandCode><Caption:รหัสคำร้อง><DisplayMode:DropDown><AllowNone:1>>>
+<Object:<Path:/Configurations/EGA/EGAAgency/LookupData/RegistrationType>><Contents:<Data:<LookupMethod:RegistrationType><Caption:ชนิดของการลงทะเบียน><DisplayMode:DropDown><AllowNone:1>>>
+<Object:<Path:/Configurations/EGA/EGAAgency/LookupData/CourseMaterial1>><Contents:<Data:<LookupMethod:CourseMaterial1><Caption:ซื้ออุปกรณ์การเรียน 1><DisplayMode:DropDown><AllowNone:1><IsDynamic:1><DependentFields:YEAR,SEMESTER,COURSE1><AdditionalParams:YEAR.Id,SEMESTER.Id,COURSE1.Id>>>
+<Object:<Path:/Configurations/EGA/EGAAgency/LookupData/CourseMaterial2>><Contents:<Data:<LookupMethod:CourseMaterial2><Caption:ซื้ออุปกรณ์การเรียน 2><DisplayMode:DropDown><AllowNone:1><IsDynamic:1><DependentFields:YEAR,SEMESTER,COURSE2><AdditionalParams:YEAR.Id,SEMESTER.Id,COURSE2.Id>>>
+<Object:<Path:/Configurations/EGA/EGAAgency/LookupData/CourseMaterial3>><Contents:<Data:<LookupMethod:CourseMaterial3><Caption:ซื้ออุปกรณ์การเรียน 3><DisplayMode:DropDown><AllowNone:1><IsDynamic:1><DependentFields:YEAR,SEMESTER,COURSE3><AdditionalParams:YEAR.Id,SEMESTER.Id,COURSE3.Id>>>
+<Object:<Path:/Configurations/EGA/EGAAgency/LookupData/Year>><Contents:<Data:<LookupMethod:Year><Caption:ปีการศึกษา><DisplayMode:DropDown><AllowNone:1>>>
+<Object:<Path:/Configurations/EGA/EGAAgency/LookupData/Semester>><Contents:<Data:<LookupMethod:Semester><Caption:ภาคเรียน><DisplayMode:DropDown><AllowNone:1><IsDynamic:1><DependentFields:YEAR><AdditionalParams:YEAR.Id>>>
+<Object:<Path:/Configurations/EGA/EGAAgency/LookupData/Course1>><Contents:<Data:<LookupMethod:Course1><Caption:รหัสชุดวิชา 1><DisplayMode:DropDown><AllowNone:1><IsDynamic:1><DependentFields:YEAR,SEMESTER><AdditionalParams:YEAR.Id,SEMESTER.Id>>>
+<Object:<Path:/Configurations/EGA/EGAAgency/LookupData/Course2>><Contents:<Data:<LookupMethod:Course2><Caption:รหัสชุดวิชา 2><DisplayMode:DropDown><AllowNone:1><IsDynamic:1><DependentFields:YEAR,SEMESTER><AdditionalParams:YEAR.Id,SEMESTER.Id>>>
+<Object:<Path:/Configurations/EGA/EGAAgency/LookupData/Course3>><Contents:<Data:<LookupMethod:Course3><Caption:รหัสชุดวิชา 3><DisplayMode:DropDown><AllowNone:1><IsDynamic:1><DependentFields:YEAR,SEMESTER><AdditionalParams:YEAR.Id,SEMESTER.Id>>>
+<Object:<Path:/Configurations/EGA/EGAAgency/LookupData/LoanRepaymentType>><Contents:<Data:<LookupMethod:LoanRepaymentType><Caption:ประเภทเงินกู้><DisplayMode:DropDown><AllowNone:1>>>
+<Object:<Path:/Configurations/EGA/EGAAgency/LookupData/RegistrationFee>><Contents:<Data:<LookupMethod:RegistrationFee><Caption:การสมัครเรียน><DisplayMode:DropDown><AllowNone:1>>>
+<Object:<Path:/Configurations/EGA/EGAAgency/LookupData/FieldOfStudy2>><Contents:<Data:<LookupMethod:FieldOfStudy2><Caption:แขนงวิชา><DisplayMode:DropDown><AllowNone:1>>>
+<Object:<Path:/Configurations/EGA/EGAAgency/LookupData/YearEduList111>><Contents:<Data:<LookupMethod:YearEduList111><Caption:ปีการศึกษา><DisplayMode:DropDown><AllowNone:1>>>
+<Object:<Path:/Configurations/EGA/EGAAgency/LookupData/SemesterTB22>><Contents:<Data:<LookupMethod:SemesterTB22><Caption:ภาค><DisplayMode:DropDown><AllowNone:1>>>
+<Object:<Path:/Configurations/EGA/EGAAgency/LookupData/MainStudy>><Contents:<Data:<LookupMethod:MainStudy><Caption:วิชาเอก><DisplayMode:DropDown><AllowNone:1>>>
+<Object:<Path:/Configurations/EGA/EGAAgency/LookupData/FieldOfStudy1>><Contents:<Data:<LookupMethod:FieldOfStudy1><Caption:สาขาวิชา><DisplayMode:DropDown><AllowNone:1>>>
+<Object:<Path:/Configurations/EGA/EGAAgency/LookupData/CompanyNameType1>><Contents:<Data:<LookupMethod:CompanyNameType1><Caption:เลข บ><DisplayMode:DropDown><AllowNone:1>>>
+<Object:<Path:/Configurations/EGA/EGAAgency/LookupData/CourseMaterial4>><Contents:<Data:<LookupMethod:CourseMaterial4><Caption:ซื้ออุปกรณ์การเรียน 4><DisplayMode:DropDown><AllowNone:1><IsDynamic:1><DependentFields:YEAR,SEMESTER,COURSE4><AdditionalParams:YEAR.Id,SEMESTER.Id,COURSE4.Id>>>
+<Object:<Path:/Configurations/EGA/EGAAgency/LookupData/Course4>><Contents:<Data:<LookupMethod:Course4><Caption:รหัสชุดวิชา 4><DisplayMode:DropDown><AllowNone:1><IsDynamic:1><DependentFields:YEAR,SEMESTER><AdditionalParams:YEAR.Id,SEMESTER.Id>>>
+<Object:<Path:/Configurations/EGA/EGAAgency/LookupData/RegistrationFrequency>><Contents:<Data:<LookupMethod:RegistrationFrequency><Caption:ลงทะเบียนชุดวิชา 2 ครั้งที่><DisplayMode:DropDown><AllowNone:1>>>
+<Object:<Path:/Configurations/EGA/EGAAgency/LookupData/CompanyCode>><Contents:<Data:<LookupMethod:CompanyCode><Caption:เลข บ><DisplayMode:DropDown><AllowNone:1>>>
+<Object:<Path:/Configurations/EGA/EGAAgency/LookupData/YearAndSemester>><Contents:<Data:<LookupMethod:YearAndSemester><Caption:ปีการศึกษา/ภาค><DisplayMode:DropDown><AllowNone:1>>>
+<Object:<Path:/Configurations/EGA/EGAAgency/LookupData/ToReceive>><Contents:<Data:<LookupMethod:ToReceive><Caption:มีความประสงค์จะขอรับ 1><DisplayMode:DropDown><AllowNone:1>>>
+<Object:<Path:/Configurations/EGA/EGAAgency/LookupData/CourseCode1>><Contents:<Data:<LookupMethod:CourseCode1><Caption:รหัสเข็มฯ><DisplayMode:DropDown><AllowNone:1>>>
+<Object:<Path:/Configurations/EGA/EGAAgency/LookupData/CourseCode4>><Contents:<Data:<LookupMethod:CourseCode4><Caption:รหัสครุย><DisplayMode:DropDown><AllowNone:1>>>
+<Object:<Path:/Configurations/EGA/EGAAgency/LookupData/CourseCode2>><Contents:<Data:<LookupMethod:CourseCode2><Caption:รหัสทำเนียบฯ><DisplayMode:DropDown><AllowNone:1>>>
+<Object:<Path:/Configurations/EGA/EGAAgency/LookupData/CourseCode3>><Contents:<Data:<LookupMethod:CourseCode3><Caption:รหัสปกติขาว-พระราชทาน><DisplayMode:DropDown><AllowNone:1>>>
+<Object:<Path:/Configurations/EGA/EGAAgency/LookupData/CourseCode5>><Contents:<Data:<LookupMethod:CourseCode5><Caption:รหัสแหวนรุ่น><DisplayMode:DropDown><AllowNone:1>>>
+<Object:<Path:/Configurations/EGA/EGAAgency/LookupData/CourseCode6>><Contents:<Data:<LookupMethod:CourseCode6><Caption:รหัสเข็มฯ><DisplayMode:DropDown><AllowNone:1>>>
+<Object:<Path:/Configurations/EGA/EGAAgency/LookupData/CourseCode9>><Contents:<Data:<LookupMethod:CourseCode9><Caption:รหัสครุย><DisplayMode:DropDown><AllowNone:1>>>
+<Object:<Path:/Configurations/EGA/EGAAgency/LookupData/CourseCode7>><Contents:<Data:<LookupMethod:CourseCode7><Caption:รหัสทำเนียบฯ><DisplayMode:DropDown><AllowNone:1>>>
+<Object:<Path:/Configurations/EGA/EGAAgency/LookupData/CourseCode8>><Contents:<Data:<LookupMethod:CourseCode8><Caption:รหัสปกติขาว-พระราชทาน><DisplayMode:DropDown><AllowNone:1>>>
+<Object:<Path:/Configurations/EGA/EGAAgency/LookupData/CourseCode10>><Contents:<Data:<LookupMethod:CourseCode10><Caption:รหัสแหวนรุ่น><DisplayMode:DropDown><AllowNone:1>>>
+<Object:<Path:/Configurations/EGA/EGAAgency/LookupData/CourseCode11>><Contents:<Data:<LookupMethod:CourseCode11><Caption:รหัสแหวนรุ่น><DisplayMode:DropDown><AllowNone:1>>>
+<Object:<Path:/Configurations/EGA/EGAAgency/LookupData/CourseCode12>><Contents:<Data:<LookupMethod:CourseCode12><Caption:รหัสแหวนรุ่น><DisplayMode:DropDown><AllowNone:1>>>
+<Object:<Path:/Configurations/EGA/EGAAgency/LookupData/CourseCode13>><Contents:<Data:<LookupMethod:CourseCode13><Caption:รหัสแหวนรุ่น><DisplayMode:DropDown><AllowNone:1>>>
+<Object:<Path:/Configurations/EGA/EGAAgency/LookupData/CourseCode14>><Contents:<Data:<LookupMethod:CourseCode14><Caption:รหัสแหวนรุ่น><DisplayMode:DropDown><AllowNone:1>>>
+<Object:<Path:/Configurations/EGA/EGAAgency/LookupData/PHDSpecialCourses>><Contents:<Data:<LookupMethod:PHDSpecialCourses><Caption:รหัสวิชาเอก><DisplayMode:DropDown><AllowNone:1>>>
+<Object:<Path:/Configurations/EGA/EGAAgency/LookupData/SemesterAcademicYear>><Contents:<Data:<LookupMethod:SemesterAcademicYear><Caption:ภาค/ปีการศึกษา><DisplayMode:DropDown><AllowNone:1>>>
+<Object:<Path:/Configurations/EGA/EGAAgency/LookupData/VFSTotalFee>><Contents:<Data:<LookupMethod:VFSTotalFee><Caption:ประเภทค่าธรรมเนียม (1-8)><DisplayMode:DropDown><AllowNone:1>>>
+<Object:<Path:/Configurations/EGA/EGAAgency/LookupData/VFSServiceFee>><Contents:<Data:<LookupMethod:VFSServiceFee><Caption:ค่าบริการ VFS Service Fee><DisplayMode:DropDown><AllowNone:1>>>
+<Object:<Path:/Configurations/EGA/EGAAgency/LookupData/SingaporeVisaType>><Contents:<Data:<LookupMethod:SingaporeVisaType><Caption:Singapore Visa Type><DisplayMode:DropDown><AllowNone:1>>>
+<Object:<Path:/Configurations/EGA/EGAAgency/LookupData/CompanyCode1>><Contents:<Data:<LookupMethod:CompanyCode1><Caption:คำร้อง><DisplayMode:DropDown><AllowNone:1>>>
+<Object:<Path:/Configurations/EGA/EGAAgency/LookupData/MethodOfPayment>><Contents:<Data:<LookupMethod:MethodOfPayment><Caption:การชำระเงิน><DisplayMode:DropDown><AllowNone:1>>>
+<Object:<Path:/Configurations/EGA/EGAAgency/LookupData/IDType>><Contents:<Data:<LookupMethod:IDType><Caption:ประเภทบัตร><DisplayMode:DropDown><AllowNone:1>>>
+<Object:<Path:/Configurations/EGA/EGAAgency/LookupData/Nationality>><Contents:<Data:<LookupMethod:Nationality><Caption:สัญชาติ><DisplayMode:DropDown><AllowNone:1><IsDynamic:1><DependentFields:REFNO8_lookup><AdditionalParams:REFNO8_lookup.Id>>>
+<Object:<Path:/Configurations/EGA/EGAAgency/LookupData/Transactiontype>><Contents:<Data:<LookupMethod:Transactiontype><Caption:แบบชำระ><DisplayMode:DropDown><AllowNone:1>>>
+#ReplaceWebObjectsEnd

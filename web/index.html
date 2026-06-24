@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agency Data Mapping</title>
+<style>
+  :root {
+    --paper: #FBFAF8;
+    --ink: #1A1A18;
+    --muted: #8A877E;
+    --line: #E5E2DB;
+    --panel: #FFFFFF;
+    --signal: #2F6F4F;        /* deep green — "generate / verified" */
+    --signal-soft: #EAF2EC;
+    --warn: #A6884E;
+    --err: #B23A2E;
+    --mono: 'SF Mono', 'JetBrains Mono', 'Menlo', 'Consolas', monospace;
+    --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans Thai', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-font-smoothing: antialiased; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    line-height: 1.5;
+    min-height: 100vh;
+    padding: 48px 24px;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; }
+
+  /* Header */
+  header { margin-bottom: 40px; }
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+  h1 {
+    font-size: 26px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    margin-bottom: 6px;
+  }
+  .sub { color: var(--muted); font-size: 14px; }
+  .sub code { font-family: var(--mono); font-size: 12px; }
+
+  /* Control panel */
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 24px;
+  }
+  .panel-title {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 14px;
+  }
+  .sources { display: flex; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; }
+  .source-opt {
+    flex: 1 1 200px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: border-color .15s, background .15s;
+    background: var(--paper);
+  }
+  .source-opt:hover { border-color: var(--muted); }
+  .source-opt.active {
+    border-color: var(--signal);
+    background: var(--signal-soft);
+  }
+  .source-opt .name { font-weight: 600; font-size: 14px; margin-bottom: 2px; }
+  .source-opt .desc { font-size: 12px; color: var(--muted); }
+  .source-opt input { display: none; }
+
+  .row { display: flex; align-items: center; gap: 12px; }
+  button.generate {
+    font-family: var(--sans);
+    font-size: 14px;
+    font-weight: 600;
+    color: #fff;
+    background: var(--signal);
+    border: none;
+    border-radius: 8px;
+    padding: 12px 22px;
+    cursor: pointer;
+    transition: opacity .15s, transform .05s;
+  }
+  button.generate:hover { opacity: .92; }
+  button.generate:active { transform: translateY(1px); }
+  button.generate:disabled { opacity: .45; cursor: default; }
+  .status-line { font-size: 13px; color: var(--muted); font-family: var(--mono); }
+  .status-line.err { color: var(--err); }
+
+  /* Results grid — the signature element */
+  .results { margin-top: 8px; }
+  .results-head {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: 12px;
+  }
+  .results-head .meta { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+  .file-grid { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+  .file-row {
+    display: grid;
+    grid-template-columns: 18px 1fr auto auto;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--line);
+    background: var(--panel);
+  }
+  .file-row:last-child { border-bottom: none; }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--line); justify-self: center; }
+  .file-row.done .dot { background: var(--signal); }
+  .file-row.running .dot { background: var(--warn); animation: pulse 1s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+  .fname { font-family: var(--mono); font-size: 13px; }
+  .fcount { font-family: var(--mono); font-size: 12px; color: var(--muted); text-align: right; }
+  .fcount b { color: var(--ink); font-weight: 600; }
+  .dl {
+    font-family: var(--mono); font-size: 11px;
+    color: var(--signal); text-decoration: none;
+    border: 1px solid var(--line); border-radius: 5px;
+    padding: 3px 9px; transition: border-color .15s;
+    opacity: 0; pointer-events: none;
+  }
+  .file-row.done .dl { opacity: 1; pointer-events: auto; }
+  .dl:hover { border-color: var(--signal); }
+
+  .actions { margin-top: 18px; display: flex; gap: 12px; align-items: center; }
+  .download-all {
+    font-family: var(--sans); font-size: 13px; font-weight: 600;
+    color: var(--ink); background: transparent;
+    border: 1px solid var(--ink); border-radius: 8px;
+    padding: 10px 18px; cursor: pointer; text-decoration: none;
+    transition: background .15s, color .15s;
+  }
+  .download-all:hover { background: var(--ink); color: var(--paper); }
+  .summary { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+  .summary b { color: var(--signal); }
+
+  .empty { color: var(--muted); font-size: 13px; padding: 20px 0; text-align: center; }
+  footer { margin-top: 48px; font-family: var(--mono); font-size: 11px; color: var(--muted); }
+  @media (prefers-reduced-motion: reduce) { .file-row.running .dot { animation: none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">THP · Escher SBA · WebObjects</div>
+    <h1>Agency Data Mapping</h1>
+    <p class="sub">Generate Escher SBA WebObject files from Pay@Post config. Output is byte-identical to the reference tool.</p>
+  </header>
+
+  <div class="panel">
+    <div class="panel-title">Source</div>
+    <div class="sources" id="sources">
+      <label class="source-opt active">
+        <input type="radio" name="source" value="excel" checked>
+        <div class="name">Local Excel</div>
+        <div class="desc">Snapshotted .xlsx source files</div>
+      </label>
+      <label class="source-opt">
+        <input type="radio" name="source" value="google_sheets">
+        <div class="name">Google Sheets</div>
+        <div class="desc">Live from the Drive folder</div>
+      </label>
+    </div>
+    <div class="row">
+      <button class="generate" id="genBtn">Generate files</button>
+      <span class="status-line" id="status">Ready</span>
+    </div>
+  </div>
+
+  <div class="results">
+    <div class="results-head">
+      <div class="panel-title" style="margin:0">Output</div>
+      <div class="meta" id="genMeta"></div>
+    </div>
+    <div class="file-grid" id="fileGrid">
+      <div class="empty" id="emptyState">No files yet — run a generation to see results.</div>
+    </div>
+    <div class="actions" id="actions" style="display:none">
+      <a class="download-all" id="downloadAll" href="/api/download-all">Download all (.zip)</a>
+      <span class="summary" id="summary"></span>
+    </div>
+  </div>
+
+  <footer>8 WebObject files · UTF-8 + BOM · verified against golden output</footer>
+</div>
+
+<script>
+const FILES = [
+  "RA_AgencyScheme.txt",
+  "RA_AgencyFieldData.txt",
+  "RA_AgencyPostingData.txt",
+  "RA_AgencyDerivedData.txt",
+  "RA_AgencyValidationData.txt",
+  "RA_AgencyLookup.txt",
+  "RA_AgencyBarcodeDetails.txt",
+  "RA_AgencyBarcodeParsingData.txt",
+];
+
+const grid = document.getElementById('fileGrid');
+const empty = document.getElementById('emptyState');
+const genBtn = document.getElementById('genBtn');
+const statusEl = document.getElementById('status');
+const actions = document.getElementById('actions');
+const summaryEl = document.getElementById('summary');
+const genMeta = document.getElementById('genMeta');
+
+// source selector
+document.querySelectorAll('.source-opt').forEach(opt => {
+  opt.addEventListener('click', () => {
+    document.querySelectorAll('.source-opt').forEach(o => o.classList.remove('active'));
+    opt.classList.add('active');
+    opt.querySelector('input').checked = true;
+  });
+});
+
+function selectedSource() {
+  return document.querySelector('input[name="source"]:checked').value;
+}
+
+function renderSkeleton() {
+  empty.style.display = 'none';
+  grid.innerHTML = '';
+  FILES.forEach(name => {
+    const row = document.createElement('div');
+    row.className = 'file-row running';
+    row.id = 'row-' + name;
+    row.innerHTML = `
+      <span class="dot"></span>
+      <span class="fname">${name}</span>
+      <span class="fcount">…</span>
+      <a class="dl" href="/api/download/${name}">download</a>`;
+    grid.appendChild(row);
+  });
+}
+
+function markDone(file) {
+  const row = document.getElementById('row-' + file.name);
+  if (!row) return;
+  row.classList.remove('running');
+  row.classList.add('done');
+  row.querySelector('.fcount').innerHTML = `<b>${file.lines.toLocaleString()}</b> objects`;
+}
+
+async function generate() {
+  genBtn.disabled = true;
+  actions.style.display = 'none';
+  genMeta.textContent = '';
+  statusEl.classList.remove('err');
+  statusEl.textContent = 'Loading source · running pipeline…';
+  renderSkeleton();
+
+  try {
+    const res = await fetch('/api/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ source: selectedSource() })
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: res.statusText }));
+      throw new Error(err.detail || 'Generation failed');
+    }
+    const data = await res.json();
+    // reveal each file with a small stagger so the grid reads as a sequence
+    data.files.forEach((f, i) => setTimeout(() => markDone(f), 70 * (i + 1)));
+    const settle = 70 * (data.files.length + 1);
+    setTimeout(() => {
+      statusEl.textContent = 'Done';
+      summaryEl.innerHTML = `<b>${data.total_objects.toLocaleString()}</b> objects across ${data.files.length} files`;
+      const dt = new Date(data.generated_at);
+      genMeta.textContent = dt.toLocaleString();
+      actions.style.display = 'flex';
+      genBtn.disabled = false;
+    }, settle);
+  } catch (e) {
+    statusEl.classList.add('err');
+    statusEl.textContent = e.message;
+    grid.querySelectorAll('.file-row').forEach(r => {
+      r.classList.remove('running');
+      r.querySelector('.fcount').textContent = '—';
+    });
+    genBtn.disabled = false;
+  }
+}
+
+genBtn.addEventListener('click', generate);
+</script>
+</body>
+</html>
