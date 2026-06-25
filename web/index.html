@@ -6,6 +6,7 @@
 <title>Agency Data Mapping</title>
 <style>
   :root {
+    color-scheme: light;
     --paper: #FBFAF8;
     --ink: #1A1A18;
     --muted: #8A877E;
@@ -18,6 +19,18 @@
     --mono: 'SF Mono', 'JetBrains Mono', 'Menlo', 'Consolas', monospace;
     --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans Thai', sans-serif;
   }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --paper: #10110F;
+    --ink: #F4F1EA;
+    --muted: #A6A19A;
+    --line: #343832;
+    --panel: #171916;
+    --signal: #7EC8A0;
+    --signal-soft: #16281D;
+    --warn: #D6B86A;
+    --err: #FF8D7F;
+  }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html { -webkit-font-smoothing: antialiased; }
   body {
@@ -27,11 +40,18 @@
     line-height: 1.5;
     min-height: 100vh;
     padding: 48px 24px;
+    transition: background .2s, color .2s;
   }
   .wrap { max-width: 760px; margin: 0 auto; }
 
   /* Header */
   header { margin-bottom: 40px; }
+  .topbar {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 18px;
+  }
   .eyebrow {
     font-family: var(--mono);
     font-size: 11px;
@@ -48,6 +68,31 @@
   }
   .sub { color: var(--muted); font-size: 14px; }
   .sub code { font-family: var(--mono); font-size: 12px; }
+  .theme-toggle {
+    display: inline-grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px;
+    min-width: 116px;
+    padding: 3px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--panel);
+  }
+  .theme-toggle button {
+    height: 30px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    font-family: var(--mono);
+    font-size: 11px;
+    transition: background .15s, color .15s;
+  }
+  .theme-toggle button.active {
+    background: var(--ink);
+    color: var(--paper);
+  }
 
   /* Control panel */
   .panel {
@@ -152,15 +197,33 @@
 
   .empty { color: var(--muted); font-size: 13px; padding: 20px 0; text-align: center; }
   footer { margin-top: 48px; font-family: var(--mono); font-size: 11px; color: var(--muted); }
+  @media (max-width: 640px) {
+    body { padding: 32px 16px; }
+    .topbar { flex-direction: column; }
+    .theme-toggle { width: 100%; }
+  }
   @media (prefers-reduced-motion: reduce) { .file-row.running .dot { animation: none; } }
 </style>
+<script>
+  const savedTheme = localStorage.getItem('theme');
+  const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  document.documentElement.dataset.theme = savedTheme || (systemDark ? 'dark' : 'light');
+</script>
 </head>
 <body>
 <div class="wrap">
   <header>
-    <div class="eyebrow">THP · Escher SBA · WebObjects</div>
-    <h1>Agency Data Mapping</h1>
-    <p class="sub">Generate Escher SBA WebObject files from Pay@Post config. Output is byte-identical to the reference tool.</p>
+    <div class="topbar">
+      <div>
+        <div class="eyebrow">THP · Escher SBA · WebObjects</div>
+        <h1>Agency Data Mapping</h1>
+        <p class="sub">Generate Escher SBA WebObject files from Pay@Post config. Output is byte-identical to the reference tool.</p>
+      </div>
+      <div class="theme-toggle" aria-label="Theme">
+        <button type="button" data-theme-choice="light">Light</button>
+        <button type="button" data-theme-choice="dark">Dark</button>
+      </div>
+    </div>
   </header>
 
   <div class="panel">
@@ -219,6 +282,18 @@ const statusEl = document.getElementById('status');
 const actions = document.getElementById('actions');
 const summaryEl = document.getElementById('summary');
 const genMeta = document.getElementById('genMeta');
+const themeButtons = document.querySelectorAll('[data-theme-choice]');
+
+function setTheme(theme) {
+  document.documentElement.dataset.theme = theme;
+  localStorage.setItem('theme', theme);
+  themeButtons.forEach(btn => btn.classList.toggle('active', btn.dataset.themeChoice === theme));
+}
+
+themeButtons.forEach(btn => {
+  btn.addEventListener('click', () => setTheme(btn.dataset.themeChoice));
+});
+setTheme(document.documentElement.dataset.theme);
 
 // source selector
 document.querySelectorAll('.source-opt').forEach(opt => {
