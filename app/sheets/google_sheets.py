@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import json
 import os
+import random
 import time
 from typing import Any, Optional
 
@@ -52,7 +53,7 @@ class SheetsGrids:
         self._ids = spreadsheet_ids or SPREADSHEET_IDS
         self._ttl = cache_ttl
         self._client = None
-        self._cache: dict[str, tuple[float, list[list[list[Any]]]]] = {}
+        self._cache: dict[tuple[str, int], tuple[float, list[list[Any]]]] = {}
 
     def _get_client(self):
         if self._client is None:
@@ -72,32 +73,47 @@ class SheetsGrids:
             self._client = gspread.authorize(creds)
         return self._client
 
-    def _fetch_all_sheets(self, filename: str) -> list[list[list[Any]]]:
-        """Fetch every worksheet of a spreadsheet as a list of grids."""
+    def _with_backoff(self, fn):
+        """Retry transient Sheets quota errors with truncated exponential backoff."""
+        from gspread.exceptions import APIError
+
+        delay = 1.0
+        for attempt in range(6):
+            try:
+                return fn()
+            except APIError as exc:
+                status = getattr(getattr(exc, "response", None), "status_code", None)
+                if status != 429 or attempt == 5:
+                    raise
+                time.sleep(delay + random.random())
+                delay = min(delay * 2, 32)
+
+    def _fetch_sheet(self, filename: str, sheet_index: int) -> list[list[Any]]:
+        """Fetch only the worksheet the pipeline needs."""
         spreadsheet_id = self._ids[filename]
         client = self._get_client()
-        ss = client.open_by_key(spreadsheet_id)
-        grids = []
-        for ws in ss.worksheets():
-            # get_all_values returns list[list[str]]; matches Excel grid shape.
-            grids.append(ws.get_all_values())
-        return grids
+        ss = self._with_backoff(lambda: client.open_by_key(spreadsheet_id))
+        ws = ss.get_worksheet(sheet_index)
+        if ws is None:
+            return []
+        # get_all_values returns list[list[str]]; matches Excel grid shape.
+        return self._with_backoff(ws.get_all_values)
 
     def load(self, filename: str, sheet_index: int = 0,
              force_refresh: bool = False) -> list[list[Any]]:
         now = time.time()
-        cached = self._cache.get(filename)
+        key = (filename, sheet_index)
+        cached = self._cache.get(key)
         if force_refresh or cached is None or (now - cached[0]) > self._ttl:
-            grids = self._fetch_all_sheets(filename)
-            self._cache[filename] = (now, grids)
+            grid = self._fetch_sheet(filename, sheet_index)
+            self._cache[key] = (now, grid)
         else:
-            grids = cached[1]
-        if sheet_index < 0 or sheet_index >= len(grids):
-            return []
-        return grids[sheet_index]
+            grid = cached[1]
+        return grid
 
     def invalidate(self, filename: Optional[str] = None) -> None:
         if filename is None:
             self._cache.clear()
         else:
-            self._cache.pop(filename, None)
+            for key in [key for key in self._cache if key[0] == filename]:
+                self._cache.pop(key, None)
