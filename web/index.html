@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Agency Data Mapping</title>
+<link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
 <style>
   :root {
     color-scheme: light;
@@ -51,6 +52,18 @@
     align-items: flex-start;
     justify-content: space-between;
     gap: 18px;
+  }
+  .brand {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+  }
+  .brand-logo {
+    width: 44px;
+    height: 44px;
+    flex: 0 0 44px;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(47, 111, 79, .16);
   }
   .eyebrow {
     font-family: var(--mono);
@@ -200,6 +213,7 @@
   @media (max-width: 640px) {
     body { padding: 32px 16px; }
     .topbar { flex-direction: column; }
+    .brand-logo { width: 40px; height: 40px; flex-basis: 40px; }
     .theme-toggle { width: 100%; }
   }
   @media (prefers-reduced-motion: reduce) { .file-row.running .dot { animation: none; } }
@@ -214,10 +228,13 @@
 <div class="wrap">
   <header>
     <div class="topbar">
-      <div>
-        <div class="eyebrow">THP · Escher SBA · WebObjects</div>
-        <h1>Agency Data Mapping</h1>
-        <p class="sub">Generate Escher SBA WebObject files from Pay@Post config. Output is byte-identical to the reference tool.</p>
+      <div class="brand">
+        <img class="brand-logo" src="/static/favicon.svg" alt="" aria-hidden="true">
+        <div>
+          <div class="eyebrow">THP · Escher SBA · WebObjects</div>
+          <h1>Agency Data Mapping</h1>
+          <p class="sub">Generate Escher SBA WebObject files from Pay@Post config. Output is byte-identical to the reference tool.</p>
+        </div>
       </div>
       <div class="theme-toggle" aria-label="Theme">
         <button type="button" data-theme-choice="light">Light</button>
