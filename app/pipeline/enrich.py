@@ -288,7 +288,7 @@ def _append_field(grid, i, cfg_fd, current: AgencyRawData,
 # Enrichment steps (called in order — Helper.cs:989-1005)
 # ===========================================================================
 _NOT_IMPLEMENTED_VALIDATE = {
-    "CalcVat", "CheckDupField", "FormatZero", "RevenueControlCode", "SetDateINF",
+    "CheckDupField", "FormatZero", "RevenueControlCode", "SetDateINF",
     "SetValueSubStr", "TrePetchRef2New", "CallSqlServP", "ChkLocalAmt", "EduList",
     "ChkDupBar", "LoadComboSP", "NextOrBackTab", "ServDataCombo", "SPMsgBoxOk",
 }
