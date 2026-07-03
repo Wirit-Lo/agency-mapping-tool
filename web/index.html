@@ -239,6 +239,18 @@
   .action-btn.clear { background: transparent; border-color: rgba(221, 95, 95, .45); color: var(--err); }
   .action-btn:hover { transform: translateY(-1px); }
   .action-btn:disabled { cursor: not-allowed; opacity: .55; transform: none; }
+  .action-status {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    color: var(--muted);
+    display: none;
+    font-size: 13px;
+    margin-top: 12px;
+    padding: 10px 12px;
+  }
+  .action-status.ok { border-color: rgba(125, 204, 163, .55); color: var(--ink); display: block; }
+  .action-status.err { border-color: rgba(221, 95, 95, .55); color: var(--err); display: block; }
+  .action-status.info { display: block; }
   .preview-box {
     background: var(--paper);
     border: 1px solid var(--line);
@@ -526,6 +538,7 @@ REFNO11=580.00</textarea></div>
         <button class="action-btn primary" type="button" id="saveDraft"><strong>Save to ServiceConfig</strong><span>บันทึกลง Excel กลางตัวจริง</span></button>
         <button class="action-btn clear" type="button" id="clearDraft"><strong>ล้างฟอร์ม</strong><span>ล้างค่าทุกช่องที่กรอก</span></button>
       </div>
+      <div class="action-status" id="serviceActionStatus"></div>
       <div class="check-list" id="draftChecks"></div>
       <pre class="preview-box" id="draftPreview">Draft preview will appear here.</pre>
     </div>
@@ -743,6 +756,12 @@ function renderChecks(checks) {
   });
 }
 
+function setServiceActionStatus(type, message) {
+  const box = document.getElementById('serviceActionStatus');
+  box.className = 'action-status ' + type;
+  box.textContent = message;
+}
+
 function previewDraftConfig() {
   const draft = collectDraft();
   document.getElementById('draftPreview').textContent = JSON.stringify(draft, null, 2);
@@ -780,14 +799,19 @@ document.getElementById('previewDraft').addEventListener('click', async () => {
     document.getElementById('draftPreview').textContent = JSON.stringify({ draft, mappingPreview: data }, null, 2);
     statusEl.classList.remove('err');
     statusEl.textContent = 'Preview ready';
+    setServiceActionStatus('ok', `Preview ready for service ${data.service_id}. Rows: ${Object.entries(data.rows).map(([k,v]) => `${k}=${v}`).join(', ')}`);
   } catch (e) {
     statusEl.classList.add('err');
     statusEl.textContent = e.message;
+    setServiceActionStatus('err', e.message);
   }
 });
 document.getElementById('validateDraft').addEventListener('click', () => {
   const draft = previewDraftConfig();
-  renderChecks(validateDraftConfig(draft));
+  const checks = validateDraftConfig(draft);
+  renderChecks(checks);
+  const failed = checks.filter(c => !c.ok).length;
+  setServiceActionStatus(failed ? 'err' : 'ok', failed ? `ต้องแก้ ${failed} รายการก่อน Save` : 'ตรวจข้อมูลผ่านแล้ว พร้อม Save ลง ServiceConfig');
 });
 document.getElementById('clearDraft').addEventListener('click', () => {
   if (!confirm('ล้างค่าที่กรอกทั้งหมด?')) return;
@@ -796,12 +820,16 @@ document.getElementById('clearDraft').addEventListener('click', () => {
   previewDraftConfig();
   statusEl.classList.remove('err');
   statusEl.textContent = 'Form cleared';
+  setServiceActionStatus('info', 'ล้างค่าทุกช่องแล้ว');
 });
 document.getElementById('saveDraft').addEventListener('click', async () => {
+  const btn = document.getElementById('saveDraft');
   const draft = previewDraftConfig();
   localStorage.setItem('agency-service-draft', JSON.stringify(draft));
   statusEl.classList.remove('err');
   statusEl.textContent = 'Saving draft to ServiceConfig…';
+  setServiceActionStatus('info', 'กำลังบันทึกลง PayAtPost-ServiceConfig…');
+  btn.disabled = true;
   try {
     const res = await fetch('/api/service-drafts/save', {
       method: 'POST',
@@ -815,9 +843,14 @@ document.getElementById('saveDraft').addEventListener('click', async () => {
     const data = await res.json();
     document.getElementById('draftPreview').textContent = JSON.stringify({ draft, saved: data }, null, 2);
     statusEl.textContent = 'Saved to real PayAtPost-ServiceConfig';
+    const rowText = Object.entries(data.rows).map(([k,v]) => `${k}=${v}`).join(', ');
+    setServiceActionStatus('ok', `บันทึก service ${data.service_id} ลง PayAtPost-ServiceConfig แล้ว (${rowText})`);
   } catch (e) {
     statusEl.classList.add('err');
     statusEl.textContent = e.message;
+    setServiceActionStatus('err', `Save ไม่สำเร็จ: ${e.message}`);
+  } finally {
+    btn.disabled = false;
   }
 });
 
