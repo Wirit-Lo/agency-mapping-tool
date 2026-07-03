@@ -134,7 +134,8 @@ def api_save_service_draft(req: ServiceDraftRequest) -> ServiceDraftResponse:
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"Save service draft failed: {exc}")
+        message = str(exc) or repr(exc)
+        raise HTTPException(status_code=500, detail=f"Save service draft failed: {type(exc).__name__}: {message}")
 
 
 @app.get("/api/download/{name}")

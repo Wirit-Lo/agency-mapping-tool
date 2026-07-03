@@ -293,17 +293,16 @@ def save_draft(draft: dict[str, Any]) -> ServiceDraftResponse:
 
         existing = _with_backoff(ws.get_all_values)
         if not existing:
+            _with_backoff(lambda ws=ws, header=header: ws.update("A1", [header], value_input_option="USER_ENTERED"))
             existing = [header]
-        current_header = existing[0] or header
-        kept = [current_header]
-        kept.extend(row for row in existing[1:] if not row or str(row[0]).strip() != service_id)
-        kept.extend(rows[sheet_name])
 
-        def replace_sheet_values(worksheet=ws, values=kept):
-            worksheet.clear()
-            return worksheet.update("A1", values, value_input_option="USER_ENTERED")
+        duplicate = any(row and str(row[0]).strip() == service_id for row in existing[1:])
+        if duplicate:
+            raise ValueError(f"Service {service_id} already exists in PayAtPost-ServiceConfig sheet {sheet_name}.")
 
-        _with_backoff(replace_sheet_values)
+        values = rows[sheet_name]
+        if values:
+            _with_backoff(lambda ws=ws, values=values: ws.append_rows(values, value_input_option="USER_ENTERED"))
 
     return ServiceDraftResponse(
         service_id=service_id,
