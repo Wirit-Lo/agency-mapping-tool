@@ -215,27 +215,30 @@
   .service-actions {
     align-items: stretch;
     display: grid;
-    gap: 10px;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     margin-top: 18px;
   }
   .action-btn {
-    border: 1px solid var(--line);
+    border: 2px solid var(--line);
     border-radius: 8px;
+    box-shadow: 0 10px 24px rgba(0,0,0,.14);
     cursor: pointer;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 5px;
     justify-content: center;
-    min-height: 66px;
-    padding: 11px 13px;
+    min-height: 78px;
+    padding: 14px 16px;
     text-align: left;
   }
-  .action-btn strong { font-size: 14px; }
-  .action-btn span { color: inherit; font-size: 11px; opacity: .78; }
+  .action-btn strong { font-size: 16px; line-height: 1.15; }
+  .action-btn span { color: inherit; font-size: 12px; line-height: 1.35; opacity: .82; }
   .action-btn.primary { background: var(--signal); border-color: var(--signal); color: #102015; }
   .action-btn.check { background: var(--panel); color: var(--ink); }
   .action-btn.preview { background: var(--paper); color: var(--ink); }
+  .action-btn.apply { background: #f1c46b; border-color: #f1c46b; color: #241905; }
+  .action-btn.delete { background: rgba(221, 95, 95, .16); border-color: rgba(221, 95, 95, .78); color: var(--err); }
   .action-btn.clear { background: transparent; border-color: rgba(221, 95, 95, .45); color: var(--err); }
   .action-btn:hover { transform: translateY(-1px); }
   .action-btn:disabled { cursor: not-allowed; opacity: .55; transform: none; }
@@ -533,9 +536,11 @@ REFNO11=580.00</textarea></div>
       </div>
 
       <div class="service-actions">
-        <button class="action-btn check" type="button" id="validateDraft"><strong>ตรวจข้อมูล</strong><span>เช็ค field สำคัญก่อนบันทึก</span></button>
-        <button class="action-btn preview" type="button" id="previewDraft"><strong>Preview mapping</strong><span>ดูว่าจะลง sheet ไหนบ้าง</span></button>
-        <button class="action-btn primary" type="button" id="saveDraft"><strong>Save to ServiceConfig</strong><span>บันทึกลง Excel กลางตัวจริง</span></button>
+        <button class="action-btn check" type="button" id="validateDraft"><strong>1. ตรวจข้อมูล</strong><span>เช็ค field สำคัญก่อนบันทึก</span></button>
+        <button class="action-btn preview" type="button" id="previewDraft"><strong>2. Preview mapping</strong><span>ดูว่าจะลง sheet ไหนบ้าง</span></button>
+        <button class="action-btn primary" type="button" id="saveDraft"><strong>3. Save to ServiceConfig</strong><span>บันทึกลง Excel กลางตัวจริง</span></button>
+        <button class="action-btn delete" type="button" id="deleteDraft"><strong>ลบจาก ServiceConfig</strong><span>ลบ service id นี้ออกจาก Excel กลาง</span></button>
+        <button class="action-btn apply" type="button" id="applyMain"><strong>Apply to Main Excel</strong><span>ต้องยืนยัน 2 รอบก่อนเขียนไฟล์หลัก</span></button>
         <button class="action-btn clear" type="button" id="clearDraft"><strong>ล้างฟอร์ม</strong><span>ล้างค่าทุกช่องที่กรอก</span></button>
       </div>
       <div class="action-status" id="serviceActionStatus"></div>
@@ -852,6 +857,49 @@ document.getElementById('saveDraft').addEventListener('click', async () => {
   } finally {
     btn.disabled = false;
   }
+});
+
+document.getElementById('deleteDraft').addEventListener('click', async () => {
+  const serviceId = document.getElementById('svcId').value.trim();
+  if (!serviceId) {
+    setServiceActionStatus('err', 'กรุณาใส่ Service ID ที่ต้องการลบ');
+    return;
+  }
+  if (!confirm(`ลบ service ${serviceId} ออกจาก PayAtPost-ServiceConfig?`)) return;
+  if (!confirm(`ยืนยันอีกครั้ง: ต้องการลบ service ${serviceId} ออกจากทุก sheet ใน Excel กลางจริงหรือไม่?`)) return;
+  const btn = document.getElementById('deleteDraft');
+  btn.disabled = true;
+  setServiceActionStatus('info', `กำลังลบ service ${serviceId} จาก ServiceConfig…`);
+  try {
+    const res = await fetch('/api/service-drafts/delete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ service_id: serviceId })
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: res.statusText }));
+      throw new Error(err.detail || 'Delete failed');
+    }
+    const data = await res.json();
+    const rowText = Object.entries(data.deleted_rows).map(([k,v]) => `${k}=${v}`).join(', ');
+    document.getElementById('draftPreview').textContent = JSON.stringify({ deleted: data }, null, 2);
+    setServiceActionStatus('ok', `ลบ service ${data.service_id} ออกจาก PayAtPost-ServiceConfig แล้ว (${rowText})`);
+  } catch (e) {
+    setServiceActionStatus('err', `Delete ไม่สำเร็จ: ${e.message}`);
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+document.getElementById('applyMain').addEventListener('click', () => {
+  const serviceId = document.getElementById('svcId').value.trim();
+  if (!serviceId) {
+    setServiceActionStatus('err', 'กรุณาใส่ Service ID ก่อน Apply to Main Excel');
+    return;
+  }
+  if (!confirm(`รอบที่ 1: จะเขียน service ${serviceId} เข้า Excel หลักหลายไฟล์ ต้องการไปต่อหรือไม่?`)) return;
+  if (!confirm(`รอบที่ 2: ยืนยันการเขียน service ${serviceId} เข้า Excel หลักจริงหรือไม่?`)) return;
+  setServiceActionStatus('err', 'ยังไม่ได้เปิด Apply to Main Excel: ต้องเพิ่ม mapping เขียนไฟล์หลักแบบ append-only ก่อน เพื่อกันข้อมูลลงช่องผิด');
 });
 
 const savedDraft = localStorage.getItem('agency-service-draft');

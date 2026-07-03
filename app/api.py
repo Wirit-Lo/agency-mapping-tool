@@ -23,7 +23,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from app.runner import generate
-from app.service_drafts import ServiceDraftRequest, ServiceDraftResponse, preview_draft, save_draft
+from app.service_drafts import DeleteDraftRequest, DeleteDraftResponse, ServiceDraftRequest, ServiceDraftResponse, delete_draft, preview_draft, save_draft
 
 app = FastAPI(title="Agency Data Mapping Tool", version="1.0")
 
@@ -136,6 +136,17 @@ def api_save_service_draft(req: ServiceDraftRequest) -> ServiceDraftResponse:
     except Exception as exc:
         message = str(exc) or repr(exc)
         raise HTTPException(status_code=500, detail=f"Save service draft failed: {type(exc).__name__}: {message}")
+
+
+@app.post("/api/service-drafts/delete", response_model=DeleteDraftResponse)
+def api_delete_service_draft(req: DeleteDraftRequest) -> DeleteDraftResponse:
+    try:
+        return delete_draft(req.service_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    except Exception as exc:
+        message = str(exc) or repr(exc)
+        raise HTTPException(status_code=500, detail=f"Delete service draft failed: {type(exc).__name__}: {message}")
 
 
 @app.get("/api/download/{name}")

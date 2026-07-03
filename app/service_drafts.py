@@ -55,6 +55,17 @@ class ServiceDraftResponse(BaseModel):
     warnings: list[str]
 
 
+class DeleteDraftRequest(BaseModel):
+    service_id: str
+
+
+class DeleteDraftResponse(BaseModel):
+    service_id: str
+    spreadsheet_id: str
+    deleted_rows: dict[str, int]
+    deleted_at: str
+
+
 def _value(data: dict[str, Any], *path: str, default: str = "") -> str:
     cur: Any = data
     for key in path:
@@ -326,4 +337,34 @@ def save_draft(draft: dict[str, Any]) -> ServiceDraftResponse:
         rows={name: len(values) for name, values in rows.items()},
         targets=TARGETS,
         warnings=validate_draft(draft),
+    )
+
+
+def delete_draft(service_id: str) -> DeleteDraftResponse:
+    service_id = str(service_id).strip()
+    if not service_id:
+        raise ValueError("Service ID is required.")
+
+    client = _get_gspread_client()
+    spreadsheet = _with_backoff(lambda: client.open_by_key(SERVICE_CONFIG_SPREADSHEET_ID))
+    deleted_rows: dict[str, int] = {}
+
+    for sheet_name in SHEET_HEADERS:
+        try:
+            ws = spreadsheet.worksheet(sheet_name)
+        except Exception:
+            deleted_rows[sheet_name] = 0
+            continue
+
+        existing = _with_backoff(ws.get_all_values)
+        row_numbers = [idx for idx, row in enumerate(existing, start=1) if idx > 1 and row and str(row[0]).strip() == service_id]
+        for row_number in reversed(row_numbers):
+            _with_backoff(lambda ws=ws, row_number=row_number: ws.delete_rows(row_number))
+        deleted_rows[sheet_name] = len(row_numbers)
+
+    return DeleteDraftResponse(
+        service_id=service_id,
+        spreadsheet_id=SERVICE_CONFIG_SPREADSHEET_ID,
+        deleted_rows=deleted_rows,
+        deleted_at=time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
     )
