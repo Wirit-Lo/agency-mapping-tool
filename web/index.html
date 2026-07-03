@@ -254,6 +254,56 @@
   .action-status.ok { border-color: rgba(125, 204, 163, .55); color: var(--ink); display: block; }
   .action-status.err { border-color: rgba(221, 95, 95, .55); color: var(--err); display: block; }
   .action-status.info { display: block; }
+  .modal-backdrop {
+    align-items: center;
+    background: rgba(0, 0, 0, .62);
+    display: none;
+    inset: 0;
+    justify-content: center;
+    padding: 22px;
+    position: fixed;
+    z-index: 50;
+  }
+  .modal-backdrop.open { display: flex; }
+  .confirm-modal {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    box-shadow: 0 22px 80px rgba(0,0,0,.42);
+    max-width: 520px;
+    width: min(520px, 100%);
+  }
+  .confirm-modal.danger { border-color: rgba(221, 95, 95, .7); }
+  .confirm-modal.warning { border-color: rgba(241, 196, 107, .75); }
+  .modal-body { padding: 22px 24px 18px; }
+  .modal-kicker {
+    color: var(--muted);
+    font: 11px var(--mono);
+    letter-spacing: .08em;
+    margin-bottom: 9px;
+    text-transform: uppercase;
+  }
+  .modal-title { font-size: 22px; font-weight: 750; margin-bottom: 10px; }
+  .modal-message { color: var(--muted); font-size: 15px; line-height: 1.55; white-space: pre-wrap; }
+  .modal-actions {
+    border-top: 1px solid var(--line);
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    padding: 14px 16px;
+  }
+  .modal-btn {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    cursor: pointer;
+    font: 700 13px var(--sans);
+    min-width: 112px;
+    padding: 10px 14px;
+  }
+  .modal-btn.cancel { background: var(--paper); color: var(--ink); }
+  .modal-btn.confirm { background: var(--signal); border-color: var(--signal); color: #102015; }
+  .confirm-modal.danger .modal-btn.confirm { background: var(--err); border-color: var(--err); color: #fff; }
+  .confirm-modal.warning .modal-btn.confirm { background: #f1c46b; border-color: #f1c46b; color: #241905; }
   .preview-box {
     background: var(--paper);
     border: 1px solid var(--line);
@@ -552,6 +602,20 @@ REFNO11=580.00</textarea></div>
   <footer>8 WebObject files · UTF-8 + BOM · verified against golden output</footer>
 </div>
 
+<div class="modal-backdrop" id="confirmBackdrop" aria-hidden="true">
+  <div class="confirm-modal" id="confirmModal" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+    <div class="modal-body">
+      <div class="modal-kicker" id="confirmKicker">Confirm</div>
+      <div class="modal-title" id="confirmTitle">ยืนยันการทำรายการ</div>
+      <div class="modal-message" id="confirmMessage"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-btn cancel" type="button" id="confirmCancel">ยกเลิก</button>
+      <button class="modal-btn confirm" type="button" id="confirmOk">ยืนยัน</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const FILES = [
   "RA_AgencyScheme.txt",
@@ -572,6 +636,43 @@ const actions = document.getElementById('actions');
 const summaryEl = document.getElementById('summary');
 const genMeta = document.getElementById('genMeta');
 const themeButtons = document.querySelectorAll('[data-theme-choice]');
+const confirmBackdrop = document.getElementById('confirmBackdrop');
+const confirmModal = document.getElementById('confirmModal');
+const confirmKicker = document.getElementById('confirmKicker');
+const confirmTitle = document.getElementById('confirmTitle');
+const confirmMessage = document.getElementById('confirmMessage');
+const confirmCancel = document.getElementById('confirmCancel');
+const confirmOk = document.getElementById('confirmOk');
+let confirmResolver = null;
+
+function showConfirm({ title, message, confirmText = 'ยืนยัน', cancelText = 'ยกเลิก', tone = 'default', kicker = 'Confirm' }) {
+  confirmKicker.textContent = kicker;
+  confirmTitle.textContent = title;
+  confirmMessage.textContent = message;
+  confirmOk.textContent = confirmText;
+  confirmCancel.textContent = cancelText;
+  confirmModal.className = 'confirm-modal ' + tone;
+  confirmBackdrop.classList.add('open');
+  confirmBackdrop.setAttribute('aria-hidden', 'false');
+  confirmOk.focus();
+  return new Promise(resolve => { confirmResolver = resolve; });
+}
+
+function closeConfirm(value) {
+  confirmBackdrop.classList.remove('open');
+  confirmBackdrop.setAttribute('aria-hidden', 'true');
+  if (confirmResolver) confirmResolver(value);
+  confirmResolver = null;
+}
+
+confirmCancel.addEventListener('click', () => closeConfirm(false));
+confirmOk.addEventListener('click', () => closeConfirm(true));
+confirmBackdrop.addEventListener('click', event => {
+  if (event.target === confirmBackdrop) closeConfirm(false);
+});
+document.addEventListener('keydown', event => {
+  if (event.key === 'Escape' && confirmBackdrop.classList.contains('open')) closeConfirm(false);
+});
 
 function setTheme(theme) {
   document.documentElement.dataset.theme = theme;
@@ -818,8 +919,15 @@ document.getElementById('validateDraft').addEventListener('click', () => {
   const failed = checks.filter(c => !c.ok).length;
   setServiceActionStatus(failed ? 'err' : 'ok', failed ? `ต้องแก้ ${failed} รายการก่อน Save` : 'ตรวจข้อมูลผ่านแล้ว พร้อม Save ลง ServiceConfig');
 });
-document.getElementById('clearDraft').addEventListener('click', () => {
-  if (!confirm('ล้างค่าที่กรอกทั้งหมด?')) return;
+document.getElementById('clearDraft').addEventListener('click', async () => {
+  const ok = await showConfirm({
+    tone: 'danger',
+    kicker: 'Clear form',
+    title: 'ล้างค่าทั้งฟอร์ม?',
+    message: 'ค่าที่กรอกในหน้าจอนี้และ draft ใน browser จะถูกล้างทั้งหมด แต่จะไม่ลบข้อมูลที่บันทึกลง Excel กลางแล้ว',
+    confirmText: 'ล้างฟอร์ม'
+  });
+  if (!ok) return;
   localStorage.removeItem('agency-service-draft');
   resetServiceForm();
   previewDraftConfig();
@@ -865,8 +973,22 @@ document.getElementById('deleteDraft').addEventListener('click', async () => {
     setServiceActionStatus('err', 'กรุณาใส่ Service ID ที่ต้องการลบ');
     return;
   }
-  if (!confirm(`ลบ service ${serviceId} ออกจาก PayAtPost-ServiceConfig?`)) return;
-  if (!confirm(`ยืนยันอีกครั้ง: ต้องการลบ service ${serviceId} ออกจากทุก sheet ใน Excel กลางจริงหรือไม่?`)) return;
+  const firstConfirm = await showConfirm({
+    tone: 'danger',
+    kicker: 'Delete draft',
+    title: `ลบ service ${serviceId}?`,
+    message: 'รายการของ service นี้จะถูกลบออกจากทุก sheet ใน PayAtPost-ServiceConfig',
+    confirmText: 'ลบต่อ'
+  });
+  if (!firstConfirm) return;
+  const secondConfirm = await showConfirm({
+    tone: 'danger',
+    kicker: 'Final confirmation',
+    title: 'ยืนยันการลบอีกครั้ง',
+    message: `ต้องการลบ service ${serviceId} ออกจาก Excel กลางจริงหรือไม่?\nการลบนี้จะลบแถวใน Service, Barcode, Fields, Validation, DefaultValue, Derived, Receipt และ TestCases`,
+    confirmText: 'ยืนยันลบ'
+  });
+  if (!secondConfirm) return;
   const btn = document.getElementById('deleteDraft');
   btn.disabled = true;
   setServiceActionStatus('info', `กำลังลบ service ${serviceId} จาก ServiceConfig…`);
@@ -891,14 +1013,28 @@ document.getElementById('deleteDraft').addEventListener('click', async () => {
   }
 });
 
-document.getElementById('applyMain').addEventListener('click', () => {
+document.getElementById('applyMain').addEventListener('click', async () => {
   const serviceId = document.getElementById('svcId').value.trim();
   if (!serviceId) {
     setServiceActionStatus('err', 'กรุณาใส่ Service ID ก่อน Apply to Main Excel');
     return;
   }
-  if (!confirm(`รอบที่ 1: จะเขียน service ${serviceId} เข้า Excel หลักหลายไฟล์ ต้องการไปต่อหรือไม่?`)) return;
-  if (!confirm(`รอบที่ 2: ยืนยันการเขียน service ${serviceId} เข้า Excel หลักจริงหรือไม่?`)) return;
+  const firstConfirm = await showConfirm({
+    tone: 'warning',
+    kicker: 'Apply to main Excel',
+    title: `เตรียมเขียน service ${serviceId} เข้าไฟล์หลัก`,
+    message: 'ขั้นตอนนี้จะเขียนข้อมูลไปยัง Excel หลักหลายไฟล์ จึงต้องยืนยัน 2 รอบก่อนทำงานจริง',
+    confirmText: 'ไปต่อ'
+  });
+  if (!firstConfirm) return;
+  const secondConfirm = await showConfirm({
+    tone: 'warning',
+    kicker: 'Final confirmation',
+    title: 'ยืนยันรอบสุดท้าย',
+    message: `ยืนยันการเขียน service ${serviceId} เข้า Excel หลักจริงหรือไม่?`,
+    confirmText: 'ยืนยัน Apply'
+  });
+  if (!secondConfirm) return;
   setServiceActionStatus('err', 'ยังไม่ได้เปิด Apply to Main Excel: ต้องเพิ่ม mapping เขียนไฟล์หลักแบบ append-only ก่อน เพื่อกันข้อมูลลงช่องผิด');
 });
 
