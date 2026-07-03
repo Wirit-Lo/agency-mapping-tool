@@ -59,7 +59,7 @@ class SheetsGrids:
         if self._client is None:
             import gspread
             from google.oauth2.service_account import Credentials
-            scopes = ["https://www.googleapis.com/auth/spreadsheets.readonly"]
+            scopes = ["https://www.googleapis.com/auth/spreadsheets"]
             if self._sa_file:
                 creds = Credentials.from_service_account_file(self._sa_file, scopes=scopes)
             else:

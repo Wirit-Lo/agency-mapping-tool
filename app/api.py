@@ -23,6 +23,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from app.runner import generate
+from app.service_drafts import ServiceDraftRequest, ServiceDraftResponse, preview_draft, save_draft
 
 app = FastAPI(title="Agency Data Mapping Tool", version="1.0")
 
@@ -119,6 +120,21 @@ def api_generate(req: GenerateRequest) -> GenerateResponse:
         files=files,
         total_objects=total_objects,
     )
+
+
+@app.post("/api/service-drafts/preview", response_model=ServiceDraftResponse)
+def api_preview_service_draft(req: ServiceDraftRequest) -> ServiceDraftResponse:
+    return preview_draft(req.draft)
+
+
+@app.post("/api/service-drafts/save", response_model=ServiceDraftResponse)
+def api_save_service_draft(req: ServiceDraftRequest) -> ServiceDraftResponse:
+    try:
+        return save_draft(req.draft)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Save service draft failed: {exc}")
 
 
 @app.get("/api/download/{name}")

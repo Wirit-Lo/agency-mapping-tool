@@ -107,6 +107,164 @@
     color: var(--paper);
   }
 
+
+  .nav-tabs {
+    display: flex;
+    gap: 8px;
+    margin: 26px 0 22px;
+    border-bottom: 1px solid var(--line);
+  }
+  .nav-tab {
+    appearance: none;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    font-family: var(--sans);
+    font-size: 14px;
+    font-weight: 600;
+    padding: 10px 12px 12px;
+  }
+  .nav-tab.active {
+    color: var(--ink);
+    border-bottom-color: var(--signal);
+  }
+  .view { display: none; }
+  .view.active { display: block; }
+
+  .form-section {
+    border-top: 1px solid var(--line);
+    padding-top: 18px;
+    margin-top: 18px;
+  }
+  .form-section:first-of-type {
+    border-top: 0;
+    padding-top: 0;
+    margin-top: 0;
+  }
+  .section-title {
+    font-size: 15px;
+    font-weight: 650;
+    margin-bottom: 12px;
+  }
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field.full { grid-column: 1 / -1; }
+  .field label {
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+  }
+  input, select, textarea {
+    width: 100%;
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    background: var(--paper);
+    color: var(--ink);
+    font: 13px var(--sans);
+    padding: 10px 11px;
+  }
+  textarea { min-height: 88px; resize: vertical; }
+  .compact-table {
+    width: 100%;
+    border-collapse: collapse;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+    display: table;
+  }
+  .compact-table th, .compact-table td {
+    border-bottom: 1px solid var(--line);
+    padding: 7px;
+    text-align: left;
+    vertical-align: top;
+  }
+  .compact-table th {
+    color: var(--muted);
+    font: 11px var(--mono);
+    background: var(--paper);
+  }
+  .compact-table tr:last-child td { border-bottom: 0; }
+  .compact-table input, .compact-table select {
+    min-width: 72px;
+    padding: 7px 8px;
+  }
+  .mini-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 14px;
+  }
+  .secondary-btn {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--panel);
+    color: var(--ink);
+    cursor: pointer;
+    font: 600 13px var(--sans);
+    padding: 9px 13px;
+  }
+  .secondary-btn:hover { border-color: var(--signal); }
+  .service-actions {
+    align-items: stretch;
+    display: grid;
+    gap: 10px;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    margin-top: 18px;
+  }
+  .action-btn {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    justify-content: center;
+    min-height: 66px;
+    padding: 11px 13px;
+    text-align: left;
+  }
+  .action-btn strong { font-size: 14px; }
+  .action-btn span { color: inherit; font-size: 11px; opacity: .78; }
+  .action-btn.primary { background: var(--signal); border-color: var(--signal); color: #102015; }
+  .action-btn.check { background: var(--panel); color: var(--ink); }
+  .action-btn.preview { background: var(--paper); color: var(--ink); }
+  .action-btn.clear { background: transparent; border-color: rgba(221, 95, 95, .45); color: var(--err); }
+  .action-btn:hover { transform: translateY(-1px); }
+  .action-btn:disabled { cursor: not-allowed; opacity: .55; transform: none; }
+  .preview-box {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    color: var(--ink);
+    font: 12px var(--mono);
+    margin-top: 14px;
+    min-height: 120px;
+    overflow: auto;
+    padding: 12px;
+    white-space: pre-wrap;
+  }
+  .check-list {
+    display: grid;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .check-item {
+    border-left: 3px solid var(--line);
+    color: var(--muted);
+    font-size: 13px;
+    padding-left: 10px;
+  }
+  .check-item.ok { border-left-color: var(--signal); color: var(--ink); }
+  .check-item.err { border-left-color: var(--err); color: var(--err); }
+
   /* Control panel */
   .panel {
     background: var(--panel);
@@ -215,6 +373,9 @@
     .topbar { flex-direction: column; }
     .brand-logo { width: 40px; height: 40px; flex-basis: 40px; }
     .theme-toggle { width: 100%; }
+    .form-grid { grid-template-columns: 1fr; }
+    .compact-table { display: block; overflow-x: auto; }
+    .service-actions { grid-template-columns: 1fr; }
   }
   @media (prefers-reduced-motion: reduce) { .file-row.running .dot { animation: none; } }
 </style>
@@ -243,6 +404,12 @@
     </div>
   </header>
 
+  <nav class="nav-tabs" aria-label="Main sections">
+    <button class="nav-tab active" type="button" data-view-target="generateView">Generate files</button>
+    <button class="nav-tab" type="button" data-view-target="serviceView">เพิ่มบริการ</button>
+  </nav>
+
+  <section class="view active" id="generateView">
   <div class="panel">
     <div class="panel-title">Source</div>
     <div class="sources" id="sources">
@@ -276,6 +443,93 @@
       <span class="summary" id="summary"></span>
     </div>
   </div>
+
+  </section>
+
+  <section class="view" id="serviceView">
+    <div class="panel">
+      <div class="panel-title">Service Draft</div>
+      <div class="form-section">
+        <div class="section-title">ข้อมูลบริการ</div>
+        <div class="form-grid">
+          <div class="field"><label for="svcId">Service ID</label><input id="svcId" value="50376"></div>
+          <div class="field"><label for="svcName">Service Name</label><input id="svcName" value="ค่าโทรศัพท์ TOT ใหม่"></div>
+          <div class="field"><label for="agentCode">Agent Code</label><input id="agentCode" value="28"></div>
+          <div class="field"><label for="agentName">Agent Name</label><input id="agentName" value="บริษัท ทีโอที จำกัด(มหาชน) (สำนักงานใหญ่)"></div>
+          <div class="field"><label for="category">Category</label><input id="category" value="Utilities"></div>
+          <div class="field"><label for="fee">Fee</label><input id="fee" value="10.00"></div>
+          <div class="field"><label for="startDate">Start Date</label><input id="startDate" value="01/07/2015"></div>
+          <div class="field"><label for="svcStatus">Status</label><select id="svcStatus"><option selected>Open</option><option>Closed</option></select></div>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <div class="section-title">Barcode</div>
+        <div class="form-grid">
+          <div class="field"><label for="barcodeBase">Base Prefix</label><input id="barcodeBase" value="010756400001400"></div>
+          <div class="field"><label for="suffixes">Suffixes</label><input id="suffixes" value="01,91"></div>
+          <div class="field full"><label for="sampleBarcode">Sample Barcode</label><input id="sampleBarcode" value="|010756400001400010055011090712000092326559562060"></div>
+          <div class="field full"><label for="barcodeValidate">Barcode Validate</label><textarea id="barcodeValidate">substr(0,18) == "|01075640000140001",
+substr(0,18) == "|01075640000140091";
+
+Func : CalcVat ; Func : ChkDupBar;</textarea></div>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <div class="section-title">Field Mapping</div>
+        <table class="compact-table" id="fieldTable">
+          <thead><tr><th>Seq</th><th>Label</th><th>FD Name</th><th>S</th><th>E</th><th>Agency Field</th><th>Visible</th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <div class="mini-actions">
+          <button class="secondary-btn" type="button" id="addFieldRow">Add field</button>
+          <button class="secondary-btn" type="button" id="load50376">Load 50376 template</button>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <div class="section-title">Validation / Default / Derived</div>
+        <div class="form-grid">
+          <div class="field full"><label for="dateValidate">Due Date Validate</label><textarea id="dateValidate">Func : CheckDueDate
+Func : SetDateINF       Format : B.E.</textarea></div>
+          <div class="field full"><label for="amountValidate">Amount Validate</label><textarea id="amountValidate">vat = Func : CalcVat ;
+รหัสภาษี == "0" : vat = 0;
+
+AGENT_VAT_AMOUNT = vat;
+ภาษีมูลค่าเพิ่ม = vat;</textarea></div>
+          <div class="field"><label for="defaultRefno10">Default REFNO10</label><input id="defaultRefno10" value="0"></div>
+          <div class="field"><label for="derivedAttr">Derived Attribute</label><input id="derivedAttr" value="REFNO11"></div>
+          <div class="field full"><label for="derivedFormula">Derived Formula</label><textarea id="derivedFormula"></textarea></div>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <div class="section-title">Receipt / Test Case</div>
+        <div class="form-grid">
+          <div class="field full"><label for="receiptLines">Receipt Lines</label><textarea id="receiptLines">[SI_AGENT_NBR]
+[SI_SP_CODE] : [SI_SP_NAME]
+[SI_ITEM_CODE] : [SI_ITEM_NAME]
+รหัสบาร์โค้ด : [SI_INFOREFNO_1]
+เลขประจำตัวผู้เสียภาษี : [SI_INFOREFNO_3]
+จำนวนเงินชำระ    ฿[SI_PRICE_SHOW]</textarea></div>
+          <div class="field full"><label for="expectedOutput">Expected Output</label><textarea id="expectedOutput">Amount=620.60
+VAT=40.60
+REFNO10=0.00
+REFNO11=580.00</textarea></div>
+        </div>
+      </div>
+
+      <div class="service-actions">
+        <button class="action-btn check" type="button" id="validateDraft"><strong>ตรวจข้อมูล</strong><span>เช็ค field สำคัญก่อนบันทึก</span></button>
+        <button class="action-btn preview" type="button" id="previewDraft"><strong>Preview mapping</strong><span>ดูว่าจะลง sheet ไหนบ้าง</span></button>
+        <button class="action-btn primary" type="button" id="saveDraft"><strong>Save to ServiceConfig</strong><span>บันทึกลง Excel กลางตัวจริง</span></button>
+        <button class="action-btn clear" type="button" id="clearDraft"><strong>ล้างฟอร์ม</strong><span>ล้างค่าทุกช่องที่กรอก</span></button>
+      </div>
+      <div class="check-list" id="draftChecks"></div>
+      <pre class="preview-box" id="draftPreview">Draft preview will appear here.</pre>
+    </div>
+  </section>
 
   <footer>8 WebObject files · UTF-8 + BOM · verified against golden output</footer>
 </div>
@@ -311,6 +565,15 @@ themeButtons.forEach(btn => {
   btn.addEventListener('click', () => setTheme(btn.dataset.themeChoice));
 });
 setTheme(document.documentElement.dataset.theme);
+
+document.querySelectorAll('[data-view-target]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('[data-view-target]').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.viewTarget).classList.add('active');
+  });
+});
 
 // source selector
 document.querySelectorAll('.source-opt').forEach(opt => {
@@ -389,6 +652,209 @@ async function generate() {
     genBtn.disabled = false;
   }
 }
+
+
+const FIELD_TEMPLATE_50376 = [
+  [100, 'รหัสบาร์โค้ด', 'D_TEXT_01', '1', '', 'BRCDE', '1'],
+  [101, 'วันที่ครบกำหนดชำระ', 'D_DATE_01', '', '', '', '1'],
+  [102, 'เลขประจำตัวผู้เสียภาษี', 'D_TEXT_03', '2', '16', 'REFNO6', '1'],
+  [103, 'รหัสส่วนลด AP', 'D_TEXT_04', '17', '17', 'REFNO7', '1'],
+  [104, 'ประเภทโทรศัพท์/รหัสบริการ', 'D_TEXT_05', '18', '18', 'REFNO8', '1'],
+  [105, 'เลขที่บัญชี', 'D_TEXT_06', '19', '30', 'REFNO3', '1'],
+  [106, 'รหัสภาษี', 'D_TEXT_07', '31', '31', 'REFNO9', '1'],
+  [107, 'เลขที่ใบแจ้งหนี้', 'D_TEXT_08', '32', '44', 'REFNO4', '1'],
+  [108, 'ส่วนลด AP', 'D_MONEY_03', '', '', 'REFNO10', '1'],
+  [109, 'จำนวนเงินก่อนหักส่วนลด', 'D_MONEY_04', '', '', 'REFNO11', '1'],
+  [110, 'ภาษีมูลค่าเพิ่ม', 'D_MONEY_01', '', '', 'VAT', '1'],
+  [111, 'จำนวนเงินที่ชำระ (Amount)', 'D_MONEY_02', '45', '0', 'AMT', '1'],
+  [112, 'วันที่ครบกำหนดชำระ', 'D_TEXT_20', '', '', 'REFNO5', '1'],
+  [113, 'AGENT_VAT_AMOUNT', 'AGENT_VAT_AMOUNT', '', '', 'AGENT_VAT_AMOUNT', '0'],
+];
+
+function addField(values = ['', '', '', '', '', '', '1']) {
+  const tbody = document.querySelector('#fieldTable tbody');
+  const tr = document.createElement('tr');
+  ['seq','label','fdName','sPos','ePos','agencyField','visible'].forEach((name, i) => {
+    const td = document.createElement('td');
+    const input = document.createElement('input');
+    input.dataset.fieldCol = name;
+    input.value = values[i] ?? '';
+    td.appendChild(input);
+    tr.appendChild(td);
+  });
+  tbody.appendChild(tr);
+}
+
+function loadTemplate50376() {
+  document.querySelector('#fieldTable tbody').innerHTML = '';
+  FIELD_TEMPLATE_50376.forEach(addField);
+}
+
+function collectDraft() {
+  const v = id => document.getElementById(id).value;
+  const fields = [...document.querySelectorAll('#fieldTable tbody tr')].map(tr => {
+    const data = {};
+    tr.querySelectorAll('[data-field-col]').forEach(input => data[input.dataset.fieldCol] = input.value);
+    return data;
+  });
+  return {
+    service: {
+      serviceId: v('svcId'), serviceName: v('svcName'), agentCode: v('agentCode'),
+      agentName: v('agentName'), category: v('category'), fee: v('fee'),
+      startDate: v('startDate'), status: v('svcStatus')
+    },
+    barcode: {
+      basePrefix: v('barcodeBase'), suffixes: v('suffixes').split(',').map(s => s.trim()).filter(Boolean),
+      sampleBarcode: v('sampleBarcode'), validate: v('barcodeValidate')
+    },
+    fields,
+    validation: { dueDate: v('dateValidate'), amount: v('amountValidate') },
+    defaults: [{ attribute: 'REFNO10', value: v('defaultRefno10') }],
+    derived: [{ attribute: v('derivedAttr'), formula: v('derivedFormula') }],
+    receiptLines: v('receiptLines').split('\n'),
+    expectedOutput: v('expectedOutput').split('\n')
+  };
+}
+
+function validateDraftConfig(draft) {
+  const checks = [];
+  const add = (ok, text) => checks.push({ ok, text });
+  add(/^\d+$/.test(draft.service.serviceId), 'Service ID เป็นตัวเลข');
+  add(Boolean(draft.service.serviceName.trim()), 'มีชื่อบริการ');
+  add(Boolean(draft.service.agentCode.trim()), 'มี Agent Code');
+  add(draft.barcode.sampleBarcode.startsWith('|'), 'Sample barcode มี | นำหน้า');
+  add(draft.barcode.suffixes.length > 0, 'มี suffix อย่างน้อย 1 ค่า');
+  add(draft.fields.some(f => f.agencyField === 'BRCDE'), 'มี field BRCDE');
+  add(draft.fields.some(f => f.agencyField === 'AMT'), 'มี field AMT');
+  add(draft.fields.some(f => f.agencyField === 'REFNO10'), 'มี field REFNO10 สำหรับส่วนลด AP');
+  add(draft.fields.some(f => f.agencyField === 'REFNO11'), 'มี field REFNO11 สำหรับจำนวนเงินก่อนหักส่วนลด');
+  add(draft.defaults.some(d => d.attribute === 'REFNO10' && d.value !== ''), 'มี default REFNO10');
+  return checks;
+}
+
+function renderChecks(checks) {
+  const box = document.getElementById('draftChecks');
+  box.innerHTML = '';
+  checks.forEach(c => {
+    const div = document.createElement('div');
+    div.className = 'check-item ' + (c.ok ? 'ok' : 'err');
+    div.textContent = (c.ok ? 'OK · ' : 'ต้องแก้ · ') + c.text;
+    box.appendChild(div);
+  });
+}
+
+function previewDraftConfig() {
+  const draft = collectDraft();
+  document.getElementById('draftPreview').textContent = JSON.stringify(draft, null, 2);
+  return draft;
+}
+
+function resetServiceForm() {
+  ['svcId','svcName','agentCode','agentName','category','fee','startDate','barcodeBase','suffixes','sampleBarcode','barcodeValidate','dateValidate','amountValidate','defaultRefno10','derivedAttr','derivedFormula','receiptLines','expectedOutput'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('svcStatus').value = 'Open';
+  document.querySelector('#fieldTable tbody').innerHTML = '';
+  document.getElementById('draftChecks').innerHTML = '';
+  document.getElementById('draftPreview').textContent = 'Draft preview will appear here.';
+}
+
+document.getElementById('addFieldRow').addEventListener('click', () => addField());
+document.getElementById('load50376').addEventListener('click', () => {
+  loadTemplate50376();
+  previewDraftConfig();
+});
+document.getElementById('previewDraft').addEventListener('click', async () => {
+  const draft = previewDraftConfig();
+  try {
+    const res = await fetch('/api/service-drafts/preview', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ draft })
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: res.statusText }));
+      throw new Error(err.detail || 'Preview failed');
+    }
+    const data = await res.json();
+    document.getElementById('draftPreview').textContent = JSON.stringify({ draft, mappingPreview: data }, null, 2);
+    statusEl.classList.remove('err');
+    statusEl.textContent = 'Preview ready';
+  } catch (e) {
+    statusEl.classList.add('err');
+    statusEl.textContent = e.message;
+  }
+});
+document.getElementById('validateDraft').addEventListener('click', () => {
+  const draft = previewDraftConfig();
+  renderChecks(validateDraftConfig(draft));
+});
+document.getElementById('clearDraft').addEventListener('click', () => {
+  if (!confirm('ล้างค่าที่กรอกทั้งหมด?')) return;
+  localStorage.removeItem('agency-service-draft');
+  resetServiceForm();
+  previewDraftConfig();
+  statusEl.classList.remove('err');
+  statusEl.textContent = 'Form cleared';
+});
+document.getElementById('saveDraft').addEventListener('click', async () => {
+  const draft = previewDraftConfig();
+  localStorage.setItem('agency-service-draft', JSON.stringify(draft));
+  statusEl.classList.remove('err');
+  statusEl.textContent = 'Saving draft to ServiceConfig…';
+  try {
+    const res = await fetch('/api/service-drafts/save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ draft })
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: res.statusText }));
+      throw new Error(err.detail || 'Save failed');
+    }
+    const data = await res.json();
+    document.getElementById('draftPreview').textContent = JSON.stringify({ draft, saved: data }, null, 2);
+    statusEl.textContent = 'Saved to real PayAtPost-ServiceConfig';
+  } catch (e) {
+    statusEl.classList.add('err');
+    statusEl.textContent = e.message;
+  }
+});
+
+const savedDraft = localStorage.getItem('agency-service-draft');
+if (savedDraft) {
+  try {
+    const draft = JSON.parse(savedDraft);
+    if (draft.service) {
+      document.getElementById('svcId').value = draft.service.serviceId || '';
+      document.getElementById('svcName').value = draft.service.serviceName || '';
+      document.getElementById('agentCode').value = draft.service.agentCode || '';
+      document.getElementById('agentName').value = draft.service.agentName || '';
+      document.getElementById('category').value = draft.service.category || '';
+      document.getElementById('fee').value = draft.service.fee || '';
+      document.getElementById('startDate').value = draft.service.startDate || '';
+      document.getElementById('svcStatus').value = draft.service.status || 'Open';
+    }
+    if (draft.barcode) {
+      document.getElementById('barcodeBase').value = draft.barcode.basePrefix || '';
+      document.getElementById('suffixes').value = (draft.barcode.suffixes || []).join(',');
+      document.getElementById('sampleBarcode').value = draft.barcode.sampleBarcode || '';
+      document.getElementById('barcodeValidate').value = draft.barcode.validate || '';
+    }
+    document.getElementById('dateValidate').value = draft.validation?.dueDate || document.getElementById('dateValidate').value;
+    document.getElementById('amountValidate').value = draft.validation?.amount || document.getElementById('amountValidate').value;
+    document.getElementById('defaultRefno10').value = draft.defaults?.[0]?.value ?? '0';
+    document.getElementById('derivedAttr').value = draft.derived?.[0]?.attribute || 'REFNO11';
+    document.getElementById('derivedFormula').value = draft.derived?.[0]?.formula || '';
+    document.getElementById('receiptLines').value = (draft.receiptLines || []).join('\n') || document.getElementById('receiptLines').value;
+    document.getElementById('expectedOutput').value = (draft.expectedOutput || []).join('\n') || document.getElementById('expectedOutput').value;
+    document.querySelector('#fieldTable tbody').innerHTML = '';
+    (draft.fields || FIELD_TEMPLATE_50376.map(([seq,label,fdName,sPos,ePos,agencyField,visible]) => ({seq,label,fdName,sPos,ePos,agencyField,visible}))).forEach(f => addField([f.seq, f.label, f.fdName, f.sPos, f.ePos, f.agencyField, f.visible]));
+  } catch (_) { loadTemplate50376(); }
+} else {
+  loadTemplate50376();
+}
+previewDraftConfig();
 
 genBtn.addEventListener('click', generate);
 </script>
