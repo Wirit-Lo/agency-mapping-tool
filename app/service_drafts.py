@@ -254,13 +254,28 @@ def _get_gspread_client():
     scopes = ["https://www.googleapis.com/auth/spreadsheets"]
     raw_json = os.getenv("GOOGLE_SERVICE_ACCOUNT_JSON", "").strip()
     service_account_file = os.getenv("GOOGLE_SERVICE_ACCOUNT_FILE", "").strip()
+
+    # Prefer JSON because hosted environments commonly store credentials as an
+    # env var. A bad GOOGLE_SERVICE_ACCOUNT_FILE should not mask a valid JSON.
+    if raw_json:
+        try:
+            creds = Credentials.from_service_account_info(json.loads(raw_json), scopes=scopes)
+        except json.JSONDecodeError as exc:
+            raise ValueError(f"GOOGLE_SERVICE_ACCOUNT_JSON is not valid JSON: {exc}") from exc
+        return gspread.authorize(creds)
+
     if service_account_file:
-        creds = Credentials.from_service_account_file(service_account_file, scopes=scopes)
-    elif raw_json:
-        creds = Credentials.from_service_account_info(json.loads(raw_json), scopes=scopes)
-    else:
-        raise ValueError("Set GOOGLE_SERVICE_ACCOUNT_JSON or GOOGLE_SERVICE_ACCOUNT_FILE to save service drafts.")
-    return gspread.authorize(creds)
+        if not os.path.isfile(service_account_file):
+            raise ValueError(f"GOOGLE_SERVICE_ACCOUNT_FILE does not exist or is not a file: {service_account_file}")
+        if not os.access(service_account_file, os.R_OK):
+            raise ValueError(f"GOOGLE_SERVICE_ACCOUNT_FILE is not readable by the app: {service_account_file}")
+        try:
+            creds = Credentials.from_service_account_file(service_account_file, scopes=scopes)
+        except PermissionError as exc:
+            raise ValueError(f"GOOGLE_SERVICE_ACCOUNT_FILE permission denied: {service_account_file}") from exc
+        return gspread.authorize(creds)
+
+    raise ValueError("Set GOOGLE_SERVICE_ACCOUNT_JSON or GOOGLE_SERVICE_ACCOUNT_FILE to save service drafts.")
 
 
 def _with_backoff(fn):
