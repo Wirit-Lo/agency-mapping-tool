@@ -109,26 +109,38 @@
 
 
   .nav-tabs {
-    display: flex;
-    gap: 8px;
+    align-items: center;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    display: inline-flex;
+    gap: 6px;
     margin: 26px 0 22px;
-    border-bottom: 1px solid var(--line);
+    padding: 6px;
   }
   .nav-tab {
     appearance: none;
-    border: 0;
-    border-bottom: 2px solid transparent;
+    border: 1px solid transparent;
+    border-radius: 7px;
     background: transparent;
     color: var(--muted);
     cursor: pointer;
     font-family: var(--sans);
     font-size: 14px;
-    font-weight: 600;
-    padding: 10px 12px 12px;
+    font-weight: 750;
+    min-width: 138px;
+    padding: 11px 16px;
+    text-align: center;
+  }
+  .nav-tab:hover {
+    border-color: var(--line);
+    color: var(--ink);
   }
   .nav-tab.active {
-    color: var(--ink);
-    border-bottom-color: var(--signal);
+    background: var(--signal);
+    border-color: var(--signal);
+    box-shadow: 0 8px 22px rgba(0,0,0,.18);
+    color: #102015;
   }
   .view { display: none; }
   .view.active { display: block; }
@@ -215,33 +227,86 @@
   .service-actions {
     align-items: stretch;
     display: grid;
-    gap: 12px;
+    gap: 10px;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    margin-top: 18px;
+    margin-top: 20px;
   }
   .action-btn {
-    border: 2px solid var(--line);
+    appearance: none;
+    background: var(--panel);
+    border: 1px solid var(--line);
     border-radius: 8px;
-    box-shadow: 0 10px 24px rgba(0,0,0,.14);
+    box-shadow: 0 8px 18px rgba(0,0,0,.08);
+    color: var(--ink);
     cursor: pointer;
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    gap: 4px;
     justify-content: center;
-    min-height: 78px;
-    padding: 14px 16px;
+    min-height: 76px;
+    padding: 13px 15px;
+    position: relative;
     text-align: left;
+    transition: border-color .15s, box-shadow .15s, transform .15s, background .15s;
   }
-  .action-btn strong { font-size: 16px; line-height: 1.15; }
-  .action-btn span { color: inherit; font-size: 12px; line-height: 1.35; opacity: .82; }
-  .action-btn.primary { background: var(--signal); border-color: var(--signal); color: #102015; }
-  .action-btn.check { background: var(--panel); color: var(--ink); }
-  .action-btn.preview { background: var(--paper); color: var(--ink); }
-  .action-btn.apply { background: #f1c46b; border-color: #f1c46b; color: #241905; }
-  .action-btn.delete { background: rgba(221, 95, 95, .16); border-color: rgba(221, 95, 95, .78); color: var(--err); }
-  .action-btn.clear { background: transparent; border-color: rgba(221, 95, 95, .45); color: var(--err); }
-  .action-btn:hover { transform: translateY(-1px); }
-  .action-btn:disabled { cursor: not-allowed; opacity: .55; transform: none; }
+  .action-btn::before {
+    background: var(--accent, var(--line));
+    border-radius: 999px;
+    content: "";
+    height: 4px;
+    left: 14px;
+    position: absolute;
+    right: 14px;
+    top: 10px;
+  }
+  .action-btn strong {
+    display: block;
+    font-size: 15px;
+    font-weight: 750;
+    line-height: 1.25;
+    margin-top: 8px;
+  }
+  .action-btn span {
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.35;
+  }
+  .action-btn.primary {
+    --accent: var(--signal);
+    background: var(--signal-soft);
+    border-color: rgba(47, 111, 79, .48);
+  }
+  .action-btn.check { --accent: #6E8FA8; }
+  .action-btn.preview { --accent: #8C7AB8; }
+  .action-btn.apply {
+    --accent: #D8A435;
+    background: rgba(241, 196, 107, .16);
+    border-color: rgba(216, 164, 53, .52);
+  }
+  .action-btn.rollback,
+  .action-btn.delete {
+    --accent: var(--err);
+    background: rgba(221, 95, 95, .10);
+    border-color: rgba(221, 95, 95, .42);
+  }
+  .action-btn.clear {
+    --accent: var(--muted);
+    background: transparent;
+  }
+  .action-btn:hover {
+    border-color: var(--accent, var(--signal));
+    box-shadow: 0 12px 26px rgba(0,0,0,.13);
+    transform: translateY(-1px);
+  }
+  .action-btn:focus-visible {
+    outline: 3px solid color-mix(in srgb, var(--accent, var(--signal)) 38%, transparent);
+    outline-offset: 2px;
+  }
+  .action-btn:disabled {
+    cursor: not-allowed;
+    opacity: .55;
+    transform: none;
+  }
   .action-status {
     border: 1px solid var(--line);
     border-radius: 8px;
@@ -549,7 +614,7 @@ Func : CalcVat ; Func : ChkDupBar;</textarea></div>
         </table>
         <div class="mini-actions">
           <button class="secondary-btn" type="button" id="addFieldRow">Add field</button>
-          <button class="secondary-btn" type="button" id="load50376">Load 50376 template</button>
+          <button class="secondary-btn" type="button" id="load50376">โหลดเทมเพลตตัวอย่าง</button>
         </div>
       </div>
 
@@ -586,11 +651,12 @@ REFNO11=580.00</textarea></div>
       </div>
 
       <div class="service-actions">
-        <button class="action-btn check" type="button" id="validateDraft"><strong>1. ตรวจข้อมูล</strong><span>เช็ค field สำคัญก่อนบันทึก</span></button>
-        <button class="action-btn preview" type="button" id="previewDraft"><strong>2. Preview mapping</strong><span>ดูว่าจะลง sheet ไหนบ้าง</span></button>
-        <button class="action-btn primary" type="button" id="saveDraft"><strong>3. Save to ServiceConfig</strong><span>บันทึกลง Excel กลางตัวจริง</span></button>
-        <button class="action-btn delete" type="button" id="deleteDraft"><strong>ลบจาก ServiceConfig</strong><span>ลบ service id นี้ออกจาก Excel กลาง</span></button>
-        <button class="action-btn apply" type="button" id="applyMain"><strong>Apply to Main Excel</strong><span>ต้องยืนยัน 2 รอบก่อนเขียนไฟล์หลัก</span></button>
+        <button class="action-btn check" type="button" id="validateDraft"><strong>ตรวจความพร้อม</strong><span>เช็คข้อมูลสำคัญก่อนบันทึก</span></button>
+        <button class="action-btn preview" type="button" id="previewDraft"><strong>ดูตำแหน่งที่จะเขียน</strong><span>ตรวจ sheet และแถวปลายทาง</span></button>
+        <button class="action-btn primary" type="button" id="saveDraft"><strong>บันทึกลง ServiceConfig</strong><span>เพิ่มข้อมูลเข้า Excel กลาง</span></button>
+        <button class="action-btn delete" type="button" id="deleteDraft"><strong>ลบจาก ServiceConfig</strong><span>เอาบริการนี้ออกจาก Excel กลาง</span></button>
+        <button class="action-btn apply" type="button" id="applyMain"><strong>เขียนเข้า Main Excel</strong><span>ยืนยันก่อนอัปเดตไฟล์หลัก</span></button>
+        <button class="action-btn rollback" type="button" id="rollbackMain"><strong>ย้อนกลับ Main Excel</strong><span>เอาบริการนี้ออกจากไฟล์หลัก</span></button>
         <button class="action-btn clear" type="button" id="clearDraft"><strong>ล้างฟอร์ม</strong><span>ล้างค่าทุกช่องที่กรอก</span></button>
       </div>
       <div class="action-status" id="serviceActionStatus"></div>
@@ -902,10 +968,21 @@ document.getElementById('previewDraft').addEventListener('click', async () => {
       throw new Error(err.detail || 'Preview failed');
     }
     const data = await res.json();
-    document.getElementById('draftPreview').textContent = JSON.stringify({ draft, mappingPreview: data }, null, 2);
+    let mainPreview = null;
+    try {
+      const mainRes = await fetch('/api/service-drafts/preview-main', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ draft })
+      });
+      if (mainRes.ok) mainPreview = await mainRes.json();
+    } catch (_) {}
+    document.getElementById('draftPreview').textContent = JSON.stringify({ draft, serviceConfigPreview: data, mainExcelPreview: mainPreview }, null, 2);
     statusEl.classList.remove('err');
     statusEl.textContent = 'Preview ready';
-    setServiceActionStatus('ok', `Preview ready for service ${data.service_id}. Rows: ${Object.entries(data.rows).map(([k,v]) => `${k}=${v}`).join(', ')}`);
+    const rowText = Object.entries(data.rows).map(([k,v]) => `${k}=${v}`).join(', ');
+    const mainText = mainPreview ? ` Main Excel: ${Object.entries(mainPreview.rows).map(([k,v]) => `${k}=${v}`).join(', ')}` : '';
+    setServiceActionStatus('ok', `Preview ready for service ${data.service_id}. ServiceConfig: ${rowText}.${mainText}`);
   } catch (e) {
     statusEl.classList.add('err');
     statusEl.textContent = e.message;
@@ -938,6 +1015,15 @@ document.getElementById('clearDraft').addEventListener('click', async () => {
 document.getElementById('saveDraft').addEventListener('click', async () => {
   const btn = document.getElementById('saveDraft');
   const draft = previewDraftConfig();
+  const serviceId = draft.service?.serviceId || '';
+  const ok = await showConfirm({
+    tone: 'default',
+    kicker: 'Save draft',
+    title: `บันทึก service ${serviceId || '-'} ลง Excel กลาง?`,
+    message: 'ข้อมูลจะถูก append ลง PayAtPost-ServiceConfig ตัวจริง และจะยังไม่เขียนเข้า Excel หลัก',
+    confirmText: 'Save to ServiceConfig'
+  });
+  if (!ok) return;
   localStorage.setItem('agency-service-draft', JSON.stringify(draft));
   statusEl.classList.remove('err');
   statusEl.textContent = 'Saving draft to ServiceConfig…';
@@ -1035,7 +1121,76 @@ document.getElementById('applyMain').addEventListener('click', async () => {
     confirmText: 'ยืนยัน Apply'
   });
   if (!secondConfirm) return;
-  setServiceActionStatus('err', 'ยังไม่ได้เปิด Apply to Main Excel: ต้องเพิ่ม mapping เขียนไฟล์หลักแบบ append-only ก่อน เพื่อกันข้อมูลลงช่องผิด');
+  const btn = document.getElementById('applyMain');
+  const draft = previewDraftConfig();
+  btn.disabled = true;
+  setServiceActionStatus('info', `กำลังเขียน service ${serviceId} เข้า Excel หลักแบบ append-only…`);
+  try {
+    const res = await fetch('/api/service-drafts/apply-main', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ draft })
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: res.statusText }));
+      throw new Error(err.detail || 'Apply failed');
+    }
+    const data = await res.json();
+    document.getElementById('draftPreview').textContent = JSON.stringify({ applied: data }, null, 2);
+    const rowText = Object.entries(data.rows).map(([k,v]) => `${k}=${v}`).join(', ');
+    setServiceActionStatus('ok', `Apply service ${data.service_id} เข้า Excel หลักสำเร็จ (${rowText})`);
+  } catch (e) {
+    setServiceActionStatus('err', `Apply ไม่สำเร็จ: ${e.message}`);
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+document.getElementById('rollbackMain').addEventListener('click', async () => {
+  const serviceId = document.getElementById('svcId').value.trim();
+  if (!serviceId) {
+    setServiceActionStatus('err', 'กรุณาใส่ Service ID ก่อน Rollback Main Excel');
+    return;
+  }
+  const firstConfirm = await showConfirm({
+    tone: 'danger',
+    kicker: 'Rollback main Excel',
+    title: `Rollback service ${serviceId} จากไฟล์หลัก?`,
+    message: 'ขั้นตอนนี้จะลบแถวของ service id นี้ออกจาก Excel หลักทุกไฟล์เป้าหมาย',
+    confirmText: 'ไปต่อ'
+  });
+  if (!firstConfirm) return;
+  const secondConfirm = await showConfirm({
+    tone: 'danger',
+    kicker: 'Final confirmation',
+    title: 'ยืนยัน Rollback รอบสุดท้าย',
+    message: `ยืนยันลบแถว service ${serviceId} ออกจาก Excel หลักจริงหรือไม่?
+การทำงานนี้จะลบเฉพาะแถวที่มี service id ตรงกันในไฟล์หลัก`,
+    confirmText: 'ยืนยัน Rollback'
+  });
+  if (!secondConfirm) return;
+  const btn = document.getElementById('rollbackMain');
+  btn.disabled = true;
+  setServiceActionStatus('info', `กำลัง rollback service ${serviceId} จาก Excel หลัก…`);
+  try {
+    const res = await fetch('/api/service-drafts/rollback-main', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ service_id: serviceId })
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: res.statusText }));
+      throw new Error(err.detail || 'Rollback failed');
+    }
+    const data = await res.json();
+    document.getElementById('draftPreview').textContent = JSON.stringify({ rolledBack: data }, null, 2);
+    const rowText = Object.entries(data.deleted_rows).map(([k,v]) => `${k}=${v}`).join(', ');
+    setServiceActionStatus('ok', `Rollback service ${data.service_id} จาก Excel หลักสำเร็จ (${rowText})`);
+  } catch (e) {
+    setServiceActionStatus('err', `Rollback ไม่สำเร็จ: ${e.message}`);
+  } finally {
+    btn.disabled = false;
+  }
 });
 
 const savedDraft = localStorage.getItem('agency-service-draft');

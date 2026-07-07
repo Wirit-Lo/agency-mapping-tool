@@ -10,6 +10,7 @@ and hardcoded columns documented in LOGIC_SPEC.md section 1.
 from __future__ import annotations
 
 from datetime import datetime
+import re
 from typing import Any, Optional
 
 import openpyxl
@@ -32,6 +33,9 @@ from app.pipeline.helpers import (
     to_int,
 )
 from app.pipeline.rules import PCC_SERVICES
+
+
+_ZONE_SERVICE_PATTERN = re.compile(r"(?P<zone>\d+)\s*=.*?\((?P<services>[\d,\s]+)\)")
 
 
 def _excel_grid(path: str, sheet_index: int = 0) -> list[list[Any]]:
@@ -68,6 +72,34 @@ def _cell(grid: list[list[Any]], row1: int, col1: int) -> str:
     if c < 0 or c >= len(rowdata):
         return ""
     return get_cell_value(rowdata[c])
+
+
+def load_availability_sets(path: str) -> dict[str, str]:
+    """Read service-id to AvailabilitySet mapping from PayAtPost-ZoneAvailability.
+
+    The Zone sheet documents service-scoped availability in header notes such as:
+      132 = Outlet ... (50855)
+      164 = VFS (50841,50842,51052)
+
+    Outlet rows define post-office membership for each zone, while the service ids
+    in these notes define which AgencyScheme gets an AvailabilitySet tag.
+    """
+    grid = _load_grid(path)
+    mapping: dict[str, str] = {}
+    # The notes are at the top of the sheet, but scan a small header band so the
+    # loader is resilient to one or two inserted rows.
+    for row in grid[:10]:
+        for value in row:
+            text = get_cell_value(value)
+            if not text:
+                continue
+            match = _ZONE_SERVICE_PATTERN.search(text)
+            if not match:
+                continue
+            availability_set = f"Zone{match.group('zone')}"
+            for service_id in re.findall(r"\d+", match.group("services")):
+                mapping[service_id] = availability_set
+    return mapping
 
 
 def _raw(grid: list[list[Any]], row1: int, col1: int) -> Any:

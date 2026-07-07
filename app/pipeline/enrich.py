@@ -108,6 +108,7 @@ def _get_transaction_type_from_fee(object_id: str, master: list[AgencyMasterRawD
 def build_agency_and_field_data(
     path: str, cfg_as: dict, cfg_fd: dict,
     master: list[AgencyMasterRawData],
+    availability_sets: Optional[dict[str, str]] = None,
 ) -> list[AgencyRawData]:
     grid = _load_grid(path, cfg_as["SheetNo"] - 1)
     master_ids = {m.ObjectId for m in master}
@@ -153,7 +154,7 @@ def build_agency_and_field_data(
                     description = _cell(grid, i, cfg_as["SchemeDescriptionColNo"])
                     scheme_id_start = 1 if service_id in rules.NO_PIPE_SERVICE_IDS else 2
                     account_code = "51106" if as_id == "51107" else as_id
-                    availability = (
+                    availability = (availability_sets or {}).get(as_id) or (
                         "Zone132" if int(as_id) in rules.AVAILABILITY_SET_132
                         else "Zone164" if int(as_id) in rules.AVAILABILITY_SET_164
                         else "Zone486" if int(as_id) in rules.AVAILABILITY_SET_486

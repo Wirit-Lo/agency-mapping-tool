@@ -13,6 +13,8 @@ from typing import Any, Optional
 
 from pydantic import BaseModel
 
+from app.sheets.google_sheets import SPREADSHEET_IDS
+
 SERVICE_CONFIG_SPREADSHEET_ID = os.getenv(
     "SERVICE_CONFIG_SPREADSHEET_ID",
     "1pY-C4OJmTLj8j3tNSe5zGSSF7y1zqxz-rhN_axQlETs",
@@ -64,6 +66,26 @@ class DeleteDraftResponse(BaseModel):
     spreadsheet_id: str
     deleted_rows: dict[str, int]
     deleted_at: str
+
+
+class ApplyMainResponse(BaseModel):
+    service_id: str
+    applied_at: Optional[str] = None
+    dry_run: bool
+    rows: dict[str, int]
+    targets: list[dict[str, str]]
+    warnings: list[str]
+
+
+class RollbackMainRequest(BaseModel):
+    service_id: str
+
+
+class RollbackMainResponse(BaseModel):
+    service_id: str
+    rolled_back_at: str
+    deleted_rows: dict[str, int]
+    targets: list[dict[str, str]]
 
 
 def _value(data: dict[str, Any], *path: str, default: str = "") -> str:
@@ -304,6 +326,217 @@ def _with_backoff(fn):
             delay = min(delay * 2, 16)
 
 
+
+def _col_name(index: int) -> str:
+    name = ""
+    while index:
+        index, rem = divmod(index - 1, 26)
+        name = chr(65 + rem) + name
+    return name
+
+
+def _style_service_config(spreadsheet) -> None:
+    requests = []
+    for sheet_name, header in SHEET_HEADERS.items():
+        try:
+            ws = spreadsheet.worksheet(sheet_name)
+        except Exception:
+            continue
+        sheet_id = ws.id
+        values = _with_backoff(ws.get_all_values)
+        row_count = max(len(values), 1)
+        col_count = max(len(header), 1)
+        requests.extend([
+            {
+                "repeatCell": {
+                    "range": {"sheetId": sheet_id, "startRowIndex": 0, "endRowIndex": 1, "startColumnIndex": 0, "endColumnIndex": col_count},
+                    "cell": {"userEnteredFormat": {"backgroundColor": {"red": 0.24, "green": 0.45, "blue": 0.74}, "textFormat": {"foregroundColor": {"red": 1, "green": 1, "blue": 1}, "bold": True}, "horizontalAlignment": "CENTER"}},
+                    "fields": "userEnteredFormat(backgroundColor,textFormat,horizontalAlignment)",
+                }
+            },
+            {
+                "updateSheetProperties": {
+                    "properties": {"sheetId": sheet_id, "gridProperties": {"frozenRowCount": 1}},
+                    "fields": "gridProperties.frozenRowCount",
+                }
+            },
+            {
+                "setBasicFilter": {
+                    "filter": {"range": {"sheetId": sheet_id, "startRowIndex": 0, "endRowIndex": max(row_count, 2), "startColumnIndex": 0, "endColumnIndex": col_count}}
+                }
+            },
+        ])
+        if row_count > 1:
+            current_service = None
+            block_start = 1
+            color_toggle = False
+            for idx in range(1, row_count + 1):
+                row_service = values[idx - 1][0].strip() if idx - 1 < len(values) and values[idx - 1] else ""
+                boundary = idx == row_count or (idx > 1 and row_service != current_service)
+                if idx == 2:
+                    current_service = row_service
+                    block_start = 1
+                if boundary and idx > 2:
+                    color = {"red": 0.92, "green": 0.96, "blue": 1.0} if color_toggle else {"red": 1.0, "green": 1.0, "blue": 1.0}
+                    requests.append({
+                        "repeatCell": {
+                            "range": {"sheetId": sheet_id, "startRowIndex": block_start, "endRowIndex": idx - 1, "startColumnIndex": 0, "endColumnIndex": col_count},
+                            "cell": {"userEnteredFormat": {"backgroundColor": color, "borders": {"bottom": {"style": "SOLID", "width": 1, "color": {"red": 0.80, "green": 0.86, "blue": 0.92}}}}},
+                            "fields": "userEnteredFormat(backgroundColor,borders)",
+                        }
+                    })
+                    color_toggle = not color_toggle
+                    current_service = row_service
+                    block_start = idx - 1
+            if row_count == 2:
+                requests.append({
+                    "repeatCell": {
+                        "range": {"sheetId": sheet_id, "startRowIndex": 1, "endRowIndex": 2, "startColumnIndex": 0, "endColumnIndex": col_count},
+                        "cell": {"userEnteredFormat": {"backgroundColor": {"red": 0.92, "green": 0.96, "blue": 1.0}}},
+                        "fields": "userEnteredFormat.backgroundColor",
+                    }
+                })
+    if requests:
+        _with_backoff(lambda: spreadsheet.batch_update({"requests": requests}))
+
+
+def _service_config_rows_to_main_rows(draft: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    service = draft.get("service", {}) if isinstance(draft.get("service"), dict) else {}
+    barcode = draft.get("barcode", {}) if isinstance(draft.get("barcode"), dict) else {}
+    fields = draft.get("fields", []) if isinstance(draft.get("fields"), list) else []
+    defaults = draft.get("defaults", []) if isinstance(draft.get("defaults"), list) else []
+    derived = draft.get("derived", []) if isinstance(draft.get("derived"), list) else []
+    receipt_lines = draft.get("receiptLines", []) if isinstance(draft.get("receiptLines"), list) else []
+    validation = draft.get("validation", {}) if isinstance(draft.get("validation"), dict) else {}
+    service_id = str(service.get("serviceId", "")).strip()
+    service_name = service.get("serviceName", "")
+    agent_code = service.get("agentCode", "")
+    agent_name = service.get("agentName", "")
+    category = service.get("category", "Utilities")
+    fee = service.get("fee", "")
+    start_date = service.get("startDate", "")
+    status = service.get("status", "Open")
+    service_type = service.get("serviceType", "OFFLINE")
+    barcode_validate = barcode.get("validate", "")
+    suffixes = barcode.get("suffixes", []) if isinstance(barcode.get("suffixes"), list) else []
+    if not suffixes:
+        suffixes = [""]
+
+    stat_row = [""] * 16
+    stat_row[0] = service_id
+    stat_row[1] = service_name
+    stat_row[2] = start_date
+    stat_row[4] = status
+    stat_row[5] = service_type
+    stat_row[6] = "บริการรับชำระ"
+    stat_row[7] = category
+    stat_row[12] = fee
+    stat_row[13] = 0
+    stat_row[14] = 0
+    stat_row[15] = 100000
+
+    pap_rows = [[agent_code, agent_name, "", "", "", "", "", "", "", "", "", "", "", "", "", ""], ["", service_name, service_id, "", "", "", "", "", "", "", "", "", "", "", "", ""]]
+    for field in fields:
+        fd_name = str(field.get("fdName", ""))
+        pap_rows.append(["", "", field.get("seq", ""), field.get("label", ""), field.get("fieldType", "") or _field_type(fd_name), fd_name, field.get("agencyField", ""), field.get("visible", "1"), field.get("readonly", "1"), "", "", "", "", "", "", ""])
+
+    spec_rows = [[agent_code, agent_name, "", "", "", "", "", "", "", ""], ["", service_name, service_id, "", "", "", "", "", "", ""], ["", "", barcode.get("basePrefix", ""), "00", "", "", "", "", "", ""]]
+    for idx, suffix in enumerate(suffixes):
+        sample = barcode.get("sampleBarcode", "")
+        spec_rows.append(["", "", sample, "100" if idx == 0 else "", "รหัสบาร์โค้ด", "D_TEXT_01", "1", "", "BRCDE", barcode_validate if idx == 0 else ""])
+    for field in fields:
+        if str(field.get("seq", "")) == "100":
+            continue
+        spec_rows.append(["", "", "", field.get("seq", ""), field.get("label", ""), field.get("fdName", ""), field.get("sPos", ""), field.get("ePos", ""), field.get("agencyField", ""), ""])
+
+    validation_by_seq = {"100": barcode_validate, "101": validation.get("dueDate", ""), "111": validation.get("amount", "")}
+    validate_rows = [[agent_code, agent_name, "", "", "", "", "", "", "", "", "", "", ""], ["", service_name, service_id, "", "", "", "", "", "", "", "", "", ""]]
+    for field in fields:
+        seq = str(field.get("seq", ""))
+        validate_rows.append(["", "", seq, field.get("label", ""), field.get("fieldType", "") or _field_type(str(field.get("fdName", ""))), field.get("fdName", ""), field.get("agencyField", ""), field.get("visible", "1"), field.get("readonly", "1"), "(blank)", "(blank)", validation_by_seq.get(seq, ""), "(blank)"])
+
+    default_rows = []
+    for item in defaults:
+        attr = str(item.get("attribute", ""))
+        default_rows.append([service_id, service_name, _field_label(fields, attr, attr), item.get("value", ""), attr, "", "No" if item.get("editable", "N") == "N" else "Yes"])
+
+    derived_rows = []
+    for item in derived:
+        formula = str(item.get("formula", "") or "")
+        if formula.strip():
+            derived_rows.append([service_id, "SBA", item.get("attribute", ""), item.get("sourceField", ""), formula, item.get("sameAttributeSource", "No Match")])
+
+    receipt_rows = []
+    pf_fmt_id = _pf_fmt_id(service_id)
+    for index, line in enumerate(receipt_lines, start=1):
+        if str(line).strip():
+            receipt_rows.append([f"{service_id} : {service_name}", pf_fmt_id, 9 + index, 2, index, "NULL", 1, str(line), "NULL", "NULL", "NULL", "NULL"])
+
+    provider_rows = [[service_id, "SBA", "", "", 1, "Added from ServiceConfig"]]
+    map_rows = [[agent_code, agent_name, service_id]]
+    return {
+        "StatSUM": {"filename": "PayAtPost-StatSUM_Master_V1.2.xlsx", "sheet": "Main", "service_col": 1, "rows": [stat_row]},
+        "PAP_ALL_Fields": {"filename": "PayAtPost-PAP_ALL_ServiceID_V1.2-1.3.xlsx", "sheet": "Fields", "service_col": 3, "rows": pap_rows},
+        "PAP_ALL_MapAgencyID": {"filename": "PayAtPost-PAP_ALL_ServiceID_V1.2-1.3.xlsx", "sheet": "Map Agency ID", "service_col": 3, "rows": map_rows},
+        "SpecBarcode_NotBOT_STD": {"filename": "PayAtPost-SpecBarcode_V1.5.xlsx", "sheet": "NotBOT-STD", "service_col": 3, "rows": spec_rows},
+        "ValidateScriptText": {"filename": "PayAtPost-ValidateScriptText.xlsx", "sheet": "Functions", "service_col": 3, "rows": validate_rows},
+        "DefaultValue": {"filename": "PayAtPost-DefaultValue_V1.0.xlsx", "sheet": "Default", "service_col": 1, "rows": default_rows},
+        "DerivedData": {"filename": "AgencyDerivedDataRequirements.xlsx", "sheet": "DerivedData", "service_col": 1, "rows": derived_rows},
+        "ConfigReceipt": {"filename": "PayAtPost-ConfigReceipt_V1.0.xlsx", "sheet": "Receipt", "service_col": 1, "rows": receipt_rows},
+        "ServiceProviders": {"filename": "AgencyServiceProviders.xlsx", "sheet": "ServiceProvider", "service_col": 1, "rows": provider_rows},
+    }
+
+
+def _open_target_worksheet(client, filename: str, sheet_name: str):
+    spreadsheet_id = SPREADSHEET_IDS[filename]
+    ss = _with_backoff(lambda: client.open_by_key(spreadsheet_id))
+    return ss, _with_backoff(lambda: ss.worksheet(sheet_name))
+
+
+def preview_apply_main(draft: dict[str, Any]) -> ApplyMainResponse:
+    service_id = _value(draft, "service", "serviceId")
+    warnings = validate_draft(draft)
+    targets = _service_config_rows_to_main_rows(draft)
+    rows = {name: len(info["rows"]) for name, info in targets.items()}
+    plan = [{"section": name, "file": info["filename"], "sheet": info["sheet"]} for name, info in targets.items()]
+    return ApplyMainResponse(service_id=service_id, dry_run=True, rows=rows, targets=plan, warnings=warnings)
+
+
+def apply_main(draft: dict[str, Any]) -> ApplyMainResponse:
+    service_id = _value(draft, "service", "serviceId")
+    warnings = validate_draft(draft)
+    if warnings:
+        raise ValueError("Cannot apply to main Excel while draft has warnings: " + "; ".join(warnings))
+    client = _get_gspread_client()
+    targets = _service_config_rows_to_main_rows(draft)
+
+    opened = []
+    for name, info in targets.items():
+        if not info["rows"]:
+            continue
+        ss, ws = _open_target_worksheet(client, info["filename"], info["sheet"])
+        existing = _with_backoff(ws.get_all_values)
+        col = int(info["service_col"]) - 1
+        duplicate = any(len(row) > col and str(row[col]).strip().split(" : ")[0] == service_id for row in existing)
+        if duplicate:
+            raise ValueError(f"Service {service_id} already exists in {info['filename']} / {info['sheet']}.")
+        opened.append((name, info, ws))
+
+    for _, info, ws in opened:
+        _with_backoff(lambda ws=ws, values=info["rows"]: ws.append_rows(values, value_input_option="USER_ENTERED"))
+
+    rows = {name: len(info["rows"]) for name, info in targets.items()}
+    plan = [{"section": name, "file": info["filename"], "sheet": info["sheet"]} for name, info in targets.items()]
+    return ApplyMainResponse(
+        service_id=service_id,
+        applied_at=time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        dry_run=False,
+        rows=rows,
+        targets=plan,
+        warnings=[],
+    )
+
+
 def save_draft(draft: dict[str, Any]) -> ServiceDraftResponse:
     rows = build_rows(draft)
     service_id = _value(draft, "service", "serviceId")
@@ -329,6 +562,8 @@ def save_draft(draft: dict[str, Any]) -> ServiceDraftResponse:
         values = rows[sheet_name]
         if values:
             _with_backoff(lambda ws=ws, values=values: ws.append_rows(values, value_input_option="USER_ENTERED"))
+
+    _style_service_config(spreadsheet)
 
     return ServiceDraftResponse(
         service_id=service_id,
@@ -362,9 +597,61 @@ def delete_draft(service_id: str) -> DeleteDraftResponse:
             _with_backoff(lambda ws=ws, row_number=row_number: ws.delete_rows(row_number))
         deleted_rows[sheet_name] = len(row_numbers)
 
+    _style_service_config(spreadsheet)
+
     return DeleteDraftResponse(
         service_id=service_id,
         spreadsheet_id=SERVICE_CONFIG_SPREADSHEET_ID,
         deleted_rows=deleted_rows,
         deleted_at=time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+    )
+
+
+def _main_targets_for_service_id(service_id: str) -> dict[str, dict[str, Any]]:
+    return {
+        "StatSUM": {"filename": "PayAtPost-StatSUM_Master_V1.2.xlsx", "sheet": "Main", "service_col": 1},
+        "PAP_ALL_Fields": {"filename": "PayAtPost-PAP_ALL_ServiceID_V1.2-1.3.xlsx", "sheet": "Fields", "service_col": 3},
+        "PAP_ALL_MapAgencyID": {"filename": "PayAtPost-PAP_ALL_ServiceID_V1.2-1.3.xlsx", "sheet": "Map Agency ID", "service_col": 3},
+        "SpecBarcode_NotBOT_STD": {"filename": "PayAtPost-SpecBarcode_V1.5.xlsx", "sheet": "NotBOT-STD", "service_col": 3},
+        "ValidateScriptText": {"filename": "PayAtPost-ValidateScriptText.xlsx", "sheet": "Functions", "service_col": 3},
+        "DefaultValue": {"filename": "PayAtPost-DefaultValue_V1.0.xlsx", "sheet": "Default", "service_col": 1},
+        "DerivedData": {"filename": "AgencyDerivedDataRequirements.xlsx", "sheet": "DerivedData", "service_col": 1},
+        "ConfigReceipt": {"filename": "PayAtPost-ConfigReceipt_V1.0.xlsx", "sheet": "Receipt", "service_col": 1},
+        "ServiceProviders": {"filename": "AgencyServiceProviders.xlsx", "sheet": "ServiceProvider", "service_col": 1},
+    }
+
+
+def rollback_main(service_id: str) -> RollbackMainResponse:
+    service_id = str(service_id).strip()
+    if not service_id:
+        raise ValueError("Service ID is required.")
+
+    client = _get_gspread_client()
+    targets = _main_targets_for_service_id(service_id)
+    deleted_rows: dict[str, int] = {}
+    plan = []
+
+    for name, info in targets.items():
+        _, ws = _open_target_worksheet(client, info["filename"], info["sheet"])
+        existing = _with_backoff(ws.get_all_values)
+        col = int(info["service_col"]) - 1
+        row_numbers = []
+        for idx, row in enumerate(existing, start=1):
+            if idx == 1:
+                continue
+            if len(row) <= col:
+                continue
+            value = str(row[col]).strip()
+            if value.split(" : ")[0] == service_id:
+                row_numbers.append(idx)
+        for row_number in reversed(row_numbers):
+            _with_backoff(lambda ws=ws, row_number=row_number: ws.delete_rows(row_number))
+        deleted_rows[name] = len(row_numbers)
+        plan.append({"section": name, "file": info["filename"], "sheet": info["sheet"]})
+
+    return RollbackMainResponse(
+        service_id=service_id,
+        rolled_back_at=time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        deleted_rows=deleted_rows,
+        targets=plan,
     )

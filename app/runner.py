@@ -39,10 +39,11 @@ def build_agency_data(source_dir: str, config: dict):
     dropdown_values = loaders.load_dropdown_values(sp("PayAtPost-DropdownValue.xlsx"))
     service_providers = loaders.load_service_providers(sp("AgencyServiceProviders.xlsx"))
     requirements = loaders.load_derived_data_requirements(sp("AgencyDerivedDataRequirements.xlsx"))
+    availability_sets = loaders.load_availability_sets(sp("PayAtPost-ZoneAvailability.xlsx"))
 
     agency_data = enrich.build_agency_and_field_data(
         sp(config["AgencyScheme"]["SourceFileName"]),
-        config["AgencyScheme"], config["FieldData"], master,
+        config["AgencyScheme"], config["FieldData"], master, availability_sets,
     )
     enrich.run_enrichment(
         agency_data, master, validation, agent_master, config_receipt,

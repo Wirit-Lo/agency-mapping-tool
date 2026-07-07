@@ -111,6 +111,11 @@ GetAttributeName(fieldType, name):
 
 ## 4. Static Lists (business rules — คัดลอกตรงตัว)
 
+AvailabilitySet ของ service จะอ่านจาก `PayAtPost-ZoneAvailability.xlsx` ก่อน
+โดย parse note ด้านบนของ sheet `Zone` เช่น `164 = VFS (50841,50842,51052)`.
+รายการด้านล่างยังคงอยู่เป็น fallback สำหรับ zone/service ที่ไฟล์ไม่ได้ระบุ service id ไว้ชัดเจน
+เช่น `Zone486`.
+
 ```python
 noPipeServiceIds = [30078,30079,50982,50478,50597,50541,50540,93004,93005,93007]
 requiredAgentDataServiceIds = [50002,50387,51020,52059,52093]

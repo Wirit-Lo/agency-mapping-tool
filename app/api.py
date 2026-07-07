@@ -23,7 +23,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from app.runner import generate
-from app.service_drafts import DeleteDraftRequest, DeleteDraftResponse, ServiceDraftRequest, ServiceDraftResponse, delete_draft, preview_draft, save_draft
+from app.service_drafts import ApplyMainResponse, DeleteDraftRequest, DeleteDraftResponse, RollbackMainRequest, RollbackMainResponse, ServiceDraftRequest, ServiceDraftResponse, apply_main, delete_draft, preview_apply_main, preview_draft, rollback_main, save_draft
 
 app = FastAPI(title="Agency Data Mapping Tool", version="1.0")
 
@@ -147,6 +147,33 @@ def api_delete_service_draft(req: DeleteDraftRequest) -> DeleteDraftResponse:
     except Exception as exc:
         message = str(exc) or repr(exc)
         raise HTTPException(status_code=500, detail=f"Delete service draft failed: {type(exc).__name__}: {message}")
+
+
+@app.post("/api/service-drafts/preview-main", response_model=ApplyMainResponse)
+def api_preview_apply_main(req: ServiceDraftRequest) -> ApplyMainResponse:
+    return preview_apply_main(req.draft)
+
+
+@app.post("/api/service-drafts/apply-main", response_model=ApplyMainResponse)
+def api_apply_main(req: ServiceDraftRequest) -> ApplyMainResponse:
+    try:
+        return apply_main(req.draft)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    except Exception as exc:
+        message = str(exc) or repr(exc)
+        raise HTTPException(status_code=500, detail=f"Apply main Excel failed: {type(exc).__name__}: {message}")
+
+
+@app.post("/api/service-drafts/rollback-main", response_model=RollbackMainResponse)
+def api_rollback_main(req: RollbackMainRequest) -> RollbackMainResponse:
+    try:
+        return rollback_main(req.service_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    except Exception as exc:
+        message = str(exc) or repr(exc)
+        raise HTTPException(status_code=500, detail=f"Rollback main Excel failed: {type(exc).__name__}: {message}")
 
 
 @app.get("/api/download/{name}")

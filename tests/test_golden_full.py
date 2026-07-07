@@ -10,6 +10,7 @@ import os
 import pytest
 
 from app.runner import generate
+from app.sheets.loaders import load_availability_sets
 
 OUTPUT_FILES = [
     "RA_AgencyScheme.txt",
@@ -39,6 +40,14 @@ def test_output_byte_identical(outputs, filename):
     produced = (outputs / filename).read_bytes()
     golden = open(os.path.join(GOLDEN_DIR, filename), "rb").read()
     assert produced == golden, f"{filename} differs from golden output"
+
+
+def test_availability_sets_are_loaded_from_zone_file():
+    mapping = load_availability_sets(os.path.join(SOURCE_DIR, "PayAtPost-ZoneAvailability.xlsx"))
+    assert mapping["50855"] == "Zone132"
+    assert mapping["50841"] == "Zone164"
+    assert mapping["50842"] == "Zone164"
+    assert mapping["51052"] == "Zone164"
 
 
 if __name__ == "__main__":
