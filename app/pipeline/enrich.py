@@ -471,6 +471,8 @@ def get_provider_name(agency_data, service_provider_data):
             agency.Type = provider.Type
             agency.AgencyProviderName = provider.ProviderName
             agency.WorkflowId = provider.WorkflowId
+            if provider.ProviderName.lower() == "agencyprovidertrue":
+                agency.TxnType = rules.TransactionTypes.AgencySaleOnlineReversible
 
 
 def _create_derived_data(agency: AgencyRawData, attribute: str, formula: str) -> Optional[DerivedDataRawData]:

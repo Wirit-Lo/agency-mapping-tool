@@ -63,5 +63,6 @@ FIELDS_TO_SET_AS_MANDATORY = ["50492_REFNO16"]
 class TransactionTypes:
     AgencySaleOffline = "AgencySaleOffline"
     AgencySaleOnline = "AgencySaleOnline"
+    AgencySaleOnlineReversible = "AgencySaleOnlineReversible"
     AgencySaleOfflineNonReversible = "AgencySaleOfflineNonReversible"
     AgencyWithdrawal = "AgencyWithdrawal"
