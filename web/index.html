@@ -524,7 +524,7 @@
         <div>
           <div class="eyebrow">THP · Escher SBA · WebObjects</div>
           <h1>Agency Data Mapping</h1>
-          <p class="sub">Generate Escher SBA WebObject files from Pay@Post config. Output is byte-identical to the reference tool.</p>
+          <p class="sub">Generate Escher SBA WebObject files from Pay@Post config, plus an iframe workflow audit report.</p>
         </div>
       </div>
       <div class="theme-toggle" aria-label="Theme">
@@ -665,7 +665,7 @@ REFNO11=580.00</textarea></div>
     </div>
   </section>
 
-  <footer>8 WebObject files · UTF-8 + BOM · verified against golden output</footer>
+  <footer>8 WebObject files + workflow audit · UTF-8 + BOM · RA files verified against golden output</footer>
 </div>
 
 <div class="modal-backdrop" id="confirmBackdrop" aria-hidden="true">
@@ -692,6 +692,7 @@ const FILES = [
   "RA_AgencyLookup.txt",
   "RA_AgencyBarcodeDetails.txt",
   "RA_AgencyBarcodeParsingData.txt",
+  "PayAtPost_IFrameWorkflow_Audit.txt",
 ];
 
 const grid = document.getElementById('fileGrid');
@@ -794,7 +795,10 @@ function markDone(file) {
   if (!row) return;
   row.classList.remove('running');
   row.classList.add('done');
-  row.querySelector('.fcount').innerHTML = `<b>${file.lines.toLocaleString()}</b> objects`;
+  const label = file.name.startsWith('RA_') ? 'objects' : 'report';
+  row.querySelector('.fcount').innerHTML = file.name.startsWith('RA_')
+    ? `<b>${file.lines.toLocaleString()}</b> ${label}`
+    : label;
 }
 
 async function generate() {

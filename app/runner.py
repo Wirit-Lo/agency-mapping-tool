@@ -57,6 +57,75 @@ def build_agency_data(source_dir: str, config: dict):
     return agency_data, validation, dropdown_values, barcode_data
 
 
+def build_iframe_workflow_audit(source_dir: str, agency_data) -> str:
+    """Create a human-readable audit for iframe/exe workflow dependencies."""
+    function_available_name = "PayAtPost-FunctionAvailable_V1.1.xlsx"
+    function_available_path = os.path.join(source_dir, function_available_name)
+    lines = [
+        "Pay@Post OFFLINE/iFrame workflow audit",
+        "",
+        "Purpose: flags services whose AgencyScheme points to Custom.Agency.Web/Exe workflows.",
+        "The 8 RA_* WebObject outputs do not generate POS runtime function/workflow objects.",
+        f"FunctionAvailable source: {function_available_name}",
+        "",
+        "ServiceId\tType\tTags\tWorkflowId\tFunctionAvailable\tWebFields\tDetailRows\tNote",
+    ]
+
+    try:
+        function_available = loaders.load_function_available(function_available_path)
+        source_note = ""
+    except FileNotFoundError:
+        function_available = {}
+        source_note = "FunctionAvailable source file not found"
+    except KeyError:
+        function_available = {}
+        source_note = "FunctionAvailable spreadsheet id is not configured for Google Sheets source"
+
+    audited = 0
+    for agency in agency_data:
+        transaction_type = (agency.TransactionType or "").lower()
+        workflow_id = agency.WorkflowId or ""
+        if not workflow_id and "iframe" in transaction_type:
+            workflow_id = f"Custom.Agency.Web{agency.ObjectId}"
+        elif not workflow_id and "exe" in transaction_type:
+            workflow_id = f"Custom.Agency.Exe{agency.ObjectId}"
+        is_custom_workflow = workflow_id.startswith("Custom.Agency.Web") or workflow_id.startswith("Custom.Agency.Exe")
+        is_iframe_or_exe = "iframe" in transaction_type or "exe" in transaction_type
+        if not (is_custom_workflow or is_iframe_or_exe):
+            continue
+
+        audited += 1
+        fa = function_available.get(agency.ObjectId)
+        if fa:
+            fa_status = "FOUND"
+            web_fields = ",".join(fa.WebFields) if fa.WebFields else "-"
+            detail_rows = str(fa.DetailRows)
+            note = "AgencyScheme has workflow pointer; ensure matching runtime workflow/function objects are deployed."
+            if is_iframe_or_exe and not fa.WebFields:
+                note = "FunctionAvailable found, but no Web field detected; verify runtime workflow manually."
+        else:
+            fa_status = "MISSING"
+            web_fields = "-"
+            detail_rows = "0"
+            note = source_note or "No FunctionAvailable group for this service id."
+
+        lines.append("\t".join([
+            agency.ObjectId,
+            agency.TransactionType or "",
+            ",".join(agency.Tags),
+            workflow_id,
+            fa_status,
+            web_fields,
+            detail_rows,
+            note,
+        ]))
+
+    if audited == 0:
+        lines.append("No Custom.Agency.Web/Exe or iframe/exe services found.")
+
+    return "\n".join(lines) + "\n"
+
+
 def serialize_all(agency_data, validation, dropdown_values, barcode_data) -> dict[str, str]:
     """Return {output_filename: file_content} for the 7 non-barcode files."""
     schemes, fields, postings, deriveds = [], [], [], []
@@ -120,6 +189,7 @@ def generate(source_dir: str, config_path: str, out_dir: Optional[str] = None,
     config = load_config(config_path)
     agency_data, validation, dropdown_values, barcode_data = build_agency_data(source_dir, config)
     outputs = serialize_all(agency_data, validation, dropdown_values, barcode_data)
+    outputs["PayAtPost_IFrameWorkflow_Audit.txt"] = build_iframe_workflow_audit(source_dir, agency_data)
     if out_dir:
         os.makedirs(out_dir, exist_ok=True)
         for name, content in outputs.items():

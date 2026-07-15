@@ -193,3 +193,11 @@ class BarcodeRawData(BaseModel):
     MaxLength: int = 0
     ParsingRules: list[str] = Field(default_factory=list)
     BCParsingRawData: list[BarcodeParsingRawData] = Field(default_factory=list)
+
+
+class FunctionAvailableRawData(BaseModel):
+    ObjectId: str = ""
+    Caption: str = ""
+    DetailRows: int = 0
+    WebFields: list[str] = Field(default_factory=list)
+    FieldTypes: list[str] = Field(default_factory=list)

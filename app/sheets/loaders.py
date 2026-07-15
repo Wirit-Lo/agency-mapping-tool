@@ -23,6 +23,7 @@ from app.models.raw import (
     DefaultValueRawData,
     DerivedDataRequirementsRawData,
     DropdownValueRawData,
+    FunctionAvailableRawData,
     ServiceProviderRawData,
     ValidateRawData,
 )
@@ -100,6 +101,44 @@ def load_availability_sets(path: str) -> dict[str, str]:
             for service_id in re.findall(r"\d+", match.group("services")):
                 mapping[service_id] = availability_set
     return mapping
+
+
+def load_function_available(path: str) -> dict[str, FunctionAvailableRawData]:
+    """Read PayAtPost-FunctionAvailable groups by service id.
+
+    This source describes the client-side function/screen definitions used by
+    OFFLINE/iFrame and similar custom workflows. It is not serialized to a
+    Riposte WebObject here; the loader feeds the audit report so missing runtime
+    workflow dependencies are visible during generation.
+    """
+    grid = _load_grid(path, 2)
+    out: dict[str, FunctionAvailableRawData] = {}
+    current: FunctionAvailableRawData | None = None
+
+    for i in range(1, len(grid) + 1):
+        caption = _cell(grid, i, 2)
+        service_id = _cell(grid, i, 3)
+        field_type = _cell(grid, i, 5)
+        fd_name = _cell(grid, i, 6)
+
+        # Header rows carry the service caption in col 2 and the service id in
+        # col 3; detail rows normally have col 2 blank and col 5 as FieldType.
+        if caption and to_int(service_id) > 0 and not field_type:
+            object_id = str(to_int(service_id))
+            current = FunctionAvailableRawData(ObjectId=object_id, Caption=caption)
+            out[object_id] = current
+            continue
+
+        if current is None or not field_type:
+            continue
+
+        current.DetailRows += 1
+        if field_type not in current.FieldTypes:
+            current.FieldTypes.append(field_type)
+        if field_type.lower() == "web":
+            current.WebFields.append(fd_name or "(blank)")
+
+    return out
 
 
 def _raw(grid: list[list[Any]], row1: int, col1: int) -> Any:
