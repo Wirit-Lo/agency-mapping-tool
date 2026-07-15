@@ -29,7 +29,6 @@ SPREADSHEET_IDS: dict[str, str] = {
     "PayAtPost-DefaultValue_V1.0.xlsx": "1FGWPMdC2_iRBGbsJJeBE65QVu0YLrXgjvX86jKoCNos",
     "PayAtPost-ConfigReceipt_V1.0.xlsx": "1_HxLML_uIpSL-7d5_Nh42RxtYc_B1lu160F8PHA5UNY",
     "PayAtPost-ZoneAvailability.xlsx": "1M1taJsFrwic_tiO_x5XY7jf2v96fSqSHdIVOlUbQzuE",
-    "PayAtPost-FunctionAvailable_V1.1.xlsx": "1pgyrXMilZhbb5Nu2NXtsrVRVpYF4WSBvqbLW8ujIT8g",
     "AgencyDerivedDataRequirements.xlsx": "1S8Q52tIQ4J8c9zWMeki15upRy6VlahgpEA3WK-nJ4EE",
     "AgencyServiceProviders.xlsx": "1DtC8yWZxMMbJUOLRd8AwzkJEOWgriDRznSLdNB3sAqA",
     "AgentMasterData.xlsx": "1Jzh4peRzhho_1V8UvkpecrwSJgaUag9UXY8nrtlLEmw",
