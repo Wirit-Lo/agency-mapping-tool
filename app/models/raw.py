@@ -89,6 +89,9 @@ class AgencyRawData(BaseModel):
     Type: Optional[str] = None
     AgencyProviderName: Optional[str] = None
     WorkflowId: Optional[str] = None
+    # Local, version-controlled exception. When true the serializer emits a
+    # full <service>_Actual copy in addition to the normal scheme object.
+    EmitActualCopy: bool = False
 
 
 class AgencyMasterRawData(BaseModel):

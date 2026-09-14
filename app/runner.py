@@ -14,6 +14,7 @@ from app.pipeline import enrich
 from app.pipeline import barcode as barcode_mod
 from app.sheets import loaders
 from app.serialize import webobjects as wo
+from app.overrides import apply_agency_scheme_overrides
 
 
 def load_config(path: str) -> dict:
@@ -104,7 +105,8 @@ def serialize_all(agency_data, validation, dropdown_values, barcode_data) -> dic
 
 def generate(source_dir: str, config_path: str, out_dir: Optional[str] = None,
              use_google_sheets: bool = False,
-             service_account_file: Optional[str] = None) -> dict[str, str]:
+             service_account_file: Optional[str] = None,
+             apply_overrides: bool = True) -> dict[str, str]:
     """Generate all output files.
 
     By default reads local .xlsx from source_dir. Set use_google_sheets=True
@@ -119,6 +121,8 @@ def generate(source_dir: str, config_path: str, out_dir: Optional[str] = None,
 
     config = load_config(config_path)
     agency_data, validation, dropdown_values, barcode_data = build_agency_data(source_dir, config)
+    if apply_overrides:
+        apply_agency_scheme_overrides(agency_data)
     outputs = serialize_all(agency_data, validation, dropdown_values, barcode_data)
     if out_dir:
         os.makedirs(out_dir, exist_ok=True)

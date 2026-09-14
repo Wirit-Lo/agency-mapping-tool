@@ -31,7 +31,8 @@ GOLDEN_DIR = "tests/golden"
 @pytest.fixture(scope="module")
 def outputs(tmp_path_factory):
     out_dir = tmp_path_factory.mktemp("out")
-    generate(SOURCE_DIR, CONFIG, str(out_dir))
+    # This test pins the untouched C# engine. Overrides have their own tests.
+    generate(SOURCE_DIR, CONFIG, str(out_dir), apply_overrides=False)
     return out_dir
 
 

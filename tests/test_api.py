@@ -18,7 +18,7 @@ def test_health():
 
 
 def test_generate_returns_eight_files():
-    r = client.post("/api/generate", json={"source": "excel"})
+    r = client.post("/api/generate", json={"source": "excel", "apply_overrides": False})
     assert r.status_code == 200
     data = r.json()
     assert len(data["files"]) == 8
@@ -33,7 +33,7 @@ def test_index_served():
 
 @pytest.mark.parametrize("name", FILES)
 def test_download_byte_identical(name):
-    client.post("/api/generate", json={"source": "excel"})
+    client.post("/api/generate", json={"source": "excel", "apply_overrides": False})
     api_bytes = client.get(f"/api/download/{name}").content
     golden = open(f"tests/golden/{name}", "rb").read()
     assert api_bytes == golden

@@ -1,0 +1,25 @@
+{
+  "30078": {
+    "WorkflowId": "THP.Counters.Agency.CODBlue30078",
+    "EmitActualCopy": true
+  },
+  "30079": {
+    "WorkflowId": "THP.Counters.Agency.CODRed30079",
+    "EmitActualCopy": true
+  },
+  "84413": {
+    "PrimaryBarcode": "Barcode_84413",
+    "SchemeIdStart": 2,
+    "SchemeIdString": "010554609572444"
+  },
+  "84414": {
+    "PrimaryBarcode": "Barcode_84414",
+    "SchemeIdStart": 2,
+    "SchemeIdString": "010554609572445"
+  },
+  "84415": {
+    "PrimaryBarcode": "Barcode_84415",
+    "SchemeIdStart": 2,
+    "SchemeIdString": "010554609572449"
+  }
+}

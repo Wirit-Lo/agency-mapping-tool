@@ -169,7 +169,35 @@ def serialize_agency_scheme(d: AgencyRawData) -> list[str]:
             f"<TxnType:{d.TxnType}><DerivedData:{derived}><Tags:{tags}>"
             f"{start_date}{end_date}{availability}{provider}{workflow}"
         )
+    if d.EmitActualCopy and workflow:
+        # These routed schemes historically place WorkflowId before StartDate.
+        suffix = f"{start_date}{end_date}{availability}{provider}{workflow}"
+        routed_suffix = f"{workflow}{start_date}{end_date}{availability}{provider}"
+        if body.endswith(suffix):
+            body = body[:-len(suffix)] + routed_suffix
     lines.append(obj(d.ObjectId, body))
+    if d.EmitActualCopy:
+        # A full non-invokable copy used by workflows that route from the
+        # visible scheme to an internal _Actual scheme.
+        if has_secondary:
+            barcode = (
+                f"<SchemeIdString:{d.ObjectId}>"
+                f"<SecondaryBarcodes:<BarcodeDetailName:{d.PrimaryBarcode}>>"
+            )
+        else:
+            barcode = (
+                f"<PrimaryBarcode:{d.PrimaryBarcode}><SchemeIdStart:{d.SchemeIdStart}>"
+                f"<SchemeIdString:{d.SchemeIdString}>"
+            )
+        actual_body = (
+            f"<SchemeName:{d.SchemeName}><SchemeDescription:{d.SchemeDescription}>"
+            f"<AccountCode:{d.AccountCode}><AllowInvokeList:0>{barcode}"
+            f"<AgencyData:{agency_data}><Postings:{postings}>"
+            f"<ExtractId:{d.ExtractId}><AllowInvokeButton:{d.AllowInvokeButton}>"
+            f"<TxnType:{d.TxnType}><DerivedData:{derived}>"
+            f"{start_date}{end_date}{availability}{provider}"
+        )
+        lines.append(obj(f"{d.ObjectId}_Actual", actual_body))
     return lines
 
 

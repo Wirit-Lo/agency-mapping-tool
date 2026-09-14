@@ -79,6 +79,8 @@ app/
   runner.py                # orchestrator: load -> enrich -> serialize -> write
   cli.py                   # command-line entry point
   api.py                   # FastAPI backend (generate / download / download-all)
+overrides/
+  agency_scheme.json       # reviewed exceptions applied before serialization
 web/
   index.html               # minimal single-page UI (no build step)
 tests/
@@ -88,6 +90,13 @@ tests/
   test_golden_full.py      # full byte-identity regression guard (8 files)
   test_api.py              # HTTP layer byte-identity tests
 ```
+
+## Manual scheme overrides
+
+Put exceptional AgencyScheme values in `overrides/agency_scheme.json`, keyed by
+service id. The normal Excel/Google Sheets pipeline remains the source of all
+other data. Overrides for services absent from the selected source are skipped;
+unsupported override fields fail generation to prevent silent mistakes.
 
 ## Fidelity notes (hard-won, do not "simplify")
 - Output: UTF-8 **with BOM**, **LF** line endings

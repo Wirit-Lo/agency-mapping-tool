@@ -43,6 +43,7 @@ class GenerateRequest(BaseModel):
     source_dir: Optional[str] = None
     config_path: Optional[str] = None
     service_account_file: Optional[str] = None
+    apply_overrides: bool = True
 
 
 class FileResult(BaseModel):
@@ -85,6 +86,7 @@ def api_generate(req: GenerateRequest) -> GenerateResponse:
             out_dir=None,
             use_google_sheets=use_sheets,
             service_account_file=req.service_account_file,
+            apply_overrides=req.apply_overrides,
         )
     except FileNotFoundError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
