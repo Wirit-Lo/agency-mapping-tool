@@ -25,13 +25,14 @@ _PATH_PREFIX = "/Configurations/EGA/EGAAgency"
 def wrap_file(object_type: str, lines: Iterable[str]) -> str:
     """Wrap serialized objects with the #ReplaceWebObjects header/footer.
 
-    Real output uses LF line endings and a trailing newline after End.
+    Uses LF line endings with NO trailing newline after End, so the file does
+    not end with an empty row when opened in editors/spreadsheets.
     """
     body = list(lines)
     out = [f"#ReplaceWebObjectsBegin -l {_PATH_PREFIX}/{object_type}/"]
     out.extend(body)
     out.append("#ReplaceWebObjectsEnd")
-    return "\n".join(out) + "\n"
+    return "\n".join(out)
 
 
 def write_file(path: str, content: str) -> None:

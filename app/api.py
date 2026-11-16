@@ -101,7 +101,7 @@ def api_generate(req: GenerateRequest) -> GenerateResponse:
     for name, content in outputs.items():
         # RA_* files are WebObject exports, where objects = lines minus wrapper.
         # Audit/report files are plain text and should not inflate object totals.
-        line_count = content.count("\n")
+        line_count = len(content.splitlines())
         objects = max(line_count - 2, 0) if name.startswith("RA_") else 0
         total_objects += objects
         files.append(FileResult(
