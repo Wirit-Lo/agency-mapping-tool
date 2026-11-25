@@ -170,6 +170,28 @@ def serialize_agency_scheme(d: AgencyRawData) -> list[str]:
             f"<TxnType:{d.TxnType}><DerivedData:{derived}><Tags:{tags}>"
             f"{start_date}{end_date}{availability}{provider}{workflow}"
         )
+        if d.MenuScanAnyPrefix and d.SchemeIdString:
+            # Menu-selected scan must accept every prefix, but a Primary scheme
+            # validates only its own SchemeIdString. So the visible scheme uses
+            # SecondaryBarcodes (no prefix check, like 50328), and each prefix
+            # gets a hidden Primary copy (<id>_1, <id>_2…) for direct scanning.
+            menu_body = body.replace(
+                f"<PrimaryBarcode:{d.PrimaryBarcode}><SchemeIdStart:{d.SchemeIdStart}>"
+                f"<SchemeIdString:{d.SchemeIdString}>",
+                f"<SchemeIdString:{d.ObjectId}>"
+                f"<SecondaryBarcodes:<BarcodeDetailName:{d.PrimaryBarcode}>>",
+                1,
+            )
+            lines.append(obj(d.ObjectId, menu_body))
+            prefixes = [d.SchemeIdString, *d.ExtraSchemeIdStrings]
+            for n, prefix in enumerate(prefixes, start=1):
+                hidden_body = body.replace(
+                    f"<AllowInvokeList:{d.AllowInvokeList}>", "<AllowInvokeList:0>", 1
+                ).replace(
+                    f"<SchemeIdString:{d.SchemeIdString}>", f"<SchemeIdString:{prefix}>", 1
+                )
+                lines.append(obj(f"{d.ObjectId}_{n}", hidden_body))
+            return lines
     if d.EmitActualCopy and workflow:
         # These routed schemes historically place WorkflowId before StartDate.
         suffix = f"{start_date}{end_date}{availability}{provider}{workflow}"

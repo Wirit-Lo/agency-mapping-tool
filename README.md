@@ -99,7 +99,8 @@ other data. Overrides for services absent from the selected source are skipped;
 unsupported override fields fail generation to prevent silent mistakes.
 
 Supported fields: `WorkflowId`, `PrimaryBarcode`, `SchemeIdStart`,
-`SchemeIdString`, `EmitActualCopy` and `ExtraSchemeIdStrings`.
+`SchemeIdString`, `EmitActualCopy`, `ExtraSchemeIdStrings` and
+`MenuScanAnyPrefix`.
 
 ### One service, two barcode prefixes
 
@@ -114,6 +115,13 @@ prefixes with the same barcode layout, list them in `ExtraSchemeIdStrings`:
 Each extra prefix is emitted as a hidden scheme copy (`52043_2`, …) with
 `AllowInvokeList:0` and the same SchemeName, AccountCode, fields, postings,
 derived data and barcode parsing. No sheet changes are needed.
+
+Extra prefixes alone only work when the barcode is scanned from the home screen;
+selecting the service from the menu first still validates against the original
+prefix. Add `"MenuScanAnyPrefix": true` to accept every prefix from the menu too:
+the visible scheme then uses `SecondaryBarcodes` (no prefix check, like 50328)
+and each prefix — original included — becomes a hidden copy (`52043_1`,
+`52043_2`, …). Without a BRCDE validation the menu path accepts any barcode.
 
 ## Fidelity notes (hard-won, do not "simplify")
 - Output: UTF-8 **with BOM**, **LF** line endings

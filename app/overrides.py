@@ -18,6 +18,7 @@ _ALLOWED_FIELDS = {
     "SchemeIdString",
     "EmitActualCopy",
     "ExtraSchemeIdStrings",
+    "MenuScanAnyPrefix",
 }
 
 

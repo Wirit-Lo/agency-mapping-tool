@@ -27,6 +27,7 @@
     "SchemeIdString": "010756400001405"
   },
   "52043": {
-    "ExtraSchemeIdStrings": ["010753700001700"]
+    "ExtraSchemeIdStrings": ["010753700001700"],
+    "MenuScanAnyPrefix": true
   }
 }

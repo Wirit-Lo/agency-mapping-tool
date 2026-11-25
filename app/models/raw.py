@@ -92,6 +92,9 @@ class AgencyRawData(BaseModel):
     # Local, version-controlled exception: additional barcode prefixes accepted
     # by this same service (serialized as hidden <id>_2, <id>_3… scheme copies).
     ExtraSchemeIdStrings: list[str] = Field(default_factory=list)
+    # When true the visible scheme uses SecondaryBarcodes (menu-selected scan
+    # accepts any prefix) and every prefix becomes a hidden <id>_1, <id>_2… copy.
+    MenuScanAnyPrefix: bool = False
     # Local, version-controlled exception. When true the serializer emits a
     # full <service>_Actual copy in addition to the normal scheme object.
     EmitActualCopy: bool = False

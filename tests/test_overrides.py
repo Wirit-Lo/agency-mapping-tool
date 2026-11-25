@@ -57,3 +57,30 @@ def test_extra_scheme_id_strings_emit_hidden_copy_of_same_service(tmp_path):
     assert "<AccountCode:52043>" in lines[1]
     assert "<AllowInvokeList:0>" in lines[1]
     assert "<PrimaryBarcode:Barcode_52043><SchemeIdStart:2><SchemeIdString:010753700001700>" in lines[1]
+
+
+def test_menu_scan_any_prefix_emits_secondary_menu_and_hidden_prefix_copies(tmp_path):
+    agency = AgencyRawData(
+        ObjectId="52043", SchemeName="52043", AccountCode="52043",
+        AllowInvokeList=1, PrimaryBarcode="Barcode_52043",
+        SchemeIdStart=2, SchemeIdString="010753600140100",
+    )
+    path = tmp_path / "overrides.json"
+    path.write_text(json.dumps({"52043": {
+        "ExtraSchemeIdStrings": ["010753700001700"],
+        "MenuScanAnyPrefix": True,
+    }}), encoding="utf-8")
+
+    assert apply_agency_scheme_overrides([agency], str(path)) == ["52043"]
+    lines = serialize_agency_scheme(agency)
+    assert len(lines) == 3
+    menu, first, second = lines
+    assert "/52043>" in menu and "<AllowInvokeList:1>" in menu
+    assert "<SchemeIdString:52043><SecondaryBarcodes:<BarcodeDetailName:Barcode_52043>>" in menu
+    assert "<PrimaryBarcode:" not in menu
+    for line, oid, prefix in ((first, "52043_1", "010753600140100"),
+                              (second, "52043_2", "010753700001700")):
+        assert f"/{oid}>" in line
+        assert "<SchemeName:52043>" in line and "<AccountCode:52043>" in line
+        assert "<AllowInvokeList:0>" in line
+        assert f"<PrimaryBarcode:Barcode_52043><SchemeIdStart:2><SchemeIdString:{prefix}>" in line
