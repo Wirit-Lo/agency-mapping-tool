@@ -34,3 +34,24 @@ def test_unknown_override_field_fails(tmp_path):
     path.write_text('{"30078": {"TypoField": "x"}}', encoding="utf-8")
     with pytest.raises(ValueError, match="Unsupported override fields"):
         apply_agency_scheme_overrides([AgencyRawData(ObjectId="30078")], str(path))
+
+
+def test_account_overrides_route_second_prefix_to_existing_service(tmp_path):
+    from app.models.raw import PostingDataRaw
+    agency = AgencyRawData(
+        ObjectId="52099", SchemeName="52099", AccountCode="52099",
+        PostingData=[
+            PostingDataRaw(ObjectId="Post_52099", Account="52099", Attribute="Amount"),
+            PostingDataRaw(ObjectId="Post_52099_Fee", Account="BSFEE", Attribute="Fee"),
+        ],
+    )
+    path = tmp_path / "overrides.json"
+    path.write_text(json.dumps({"52099": {
+        "AccountCode": "52043", "PostingAccount": "52043",
+    }}), encoding="utf-8")
+
+    assert apply_agency_scheme_overrides([agency], str(path)) == ["52099"]
+    assert agency.AccountCode == "52043"
+    assert agency.PostingData[0].Account == "52043"
+    assert agency.PostingData[1].Account == "BSFEE"
+    assert "<AccountCode:52043>" in serialize_agency_scheme(agency)[0]

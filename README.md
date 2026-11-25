@@ -98,6 +98,22 @@ service id. The normal Excel/Google Sheets pipeline remains the source of all
 other data. Overrides for services absent from the selected source are skipped;
 unsupported override fields fail generation to prevent silent mistakes.
 
+Supported fields: `WorkflowId`, `PrimaryBarcode`, `SchemeIdStart`,
+`SchemeIdString`, `EmitActualCopy`, `AccountCode`, and `PostingAccount`
+(the `Account` of the main Amount posting; the Fee posting is unchanged).
+
+### One service, two barcode prefixes
+
+A scheme matches only one `SchemeIdString`. To accept a second prefix for an
+existing service (for example 52043 also accepting `|0107537000017` + `00`),
+add a new service id to the source sheets (StatSUM_Master, PAP_ALL_ServiceID,
+SpecBarcode, plus ConfigReceipt/ValidateScriptText rows copied from the
+original), then route its money to the original account:
+
+```json
+"<new id>": { "AccountCode": "52043", "PostingAccount": "52043" }
+```
+
 ## Fidelity notes (hard-won, do not "simplify")
 - Output: UTF-8 **with BOM**, **LF** line endings
 - DerivedData uses `<Attibute:>` (typo) — intentional
