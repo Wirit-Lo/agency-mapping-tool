@@ -36,22 +36,24 @@ def test_unknown_override_field_fails(tmp_path):
         apply_agency_scheme_overrides([AgencyRawData(ObjectId="30078")], str(path))
 
 
-def test_account_overrides_route_second_prefix_to_existing_service(tmp_path):
-    from app.models.raw import PostingDataRaw
+def test_extra_scheme_id_strings_emit_hidden_copy_of_same_service(tmp_path):
     agency = AgencyRawData(
-        ObjectId="52099", SchemeName="52099", AccountCode="52099",
-        PostingData=[
-            PostingDataRaw(ObjectId="Post_52099", Account="52099", Attribute="Amount"),
-            PostingDataRaw(ObjectId="Post_52099_Fee", Account="BSFEE", Attribute="Fee"),
-        ],
+        ObjectId="52043", SchemeName="52043", AccountCode="52043",
+        AllowInvokeList=1, PrimaryBarcode="Barcode_52043",
+        SchemeIdStart=2, SchemeIdString="010753600140100",
     )
     path = tmp_path / "overrides.json"
-    path.write_text(json.dumps({"52099": {
-        "AccountCode": "52043", "PostingAccount": "52043",
+    path.write_text(json.dumps({"52043": {
+        "ExtraSchemeIdStrings": ["010753700001700"],
     }}), encoding="utf-8")
 
-    assert apply_agency_scheme_overrides([agency], str(path)) == ["52099"]
-    assert agency.AccountCode == "52043"
-    assert agency.PostingData[0].Account == "52043"
-    assert agency.PostingData[1].Account == "BSFEE"
-    assert "<AccountCode:52043>" in serialize_agency_scheme(agency)[0]
+    assert apply_agency_scheme_overrides([agency], str(path)) == ["52043"]
+    lines = serialize_agency_scheme(agency)
+    assert len(lines) == 2
+    assert "/52043>" in lines[0] and "<SchemeIdString:010753600140100>" in lines[0]
+    assert "<AllowInvokeList:1>" in lines[0]
+    assert "/52043_2>" in lines[1]
+    assert "<SchemeName:52043>" in lines[1]
+    assert "<AccountCode:52043>" in lines[1]
+    assert "<AllowInvokeList:0>" in lines[1]
+    assert "<PrimaryBarcode:Barcode_52043><SchemeIdStart:2><SchemeIdString:010753700001700>" in lines[1]

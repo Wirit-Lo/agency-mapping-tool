@@ -99,20 +99,21 @@ other data. Overrides for services absent from the selected source are skipped;
 unsupported override fields fail generation to prevent silent mistakes.
 
 Supported fields: `WorkflowId`, `PrimaryBarcode`, `SchemeIdStart`,
-`SchemeIdString`, `EmitActualCopy`, `AccountCode`, and `PostingAccount`
-(the `Account` of the main Amount posting; the Fee posting is unchanged).
+`SchemeIdString`, `EmitActualCopy` and `ExtraSchemeIdStrings`.
 
 ### One service, two barcode prefixes
 
-A scheme matches only one `SchemeIdString`. To accept a second prefix for an
-existing service (for example 52043 also accepting `|0107537000017` + `00`),
-add a new service id to the source sheets (StatSUM_Master, PAP_ALL_ServiceID,
-SpecBarcode, plus ConfigReceipt/ValidateScriptText rows copied from the
-original), then route its money to the original account:
+A scheme matches only one `SchemeIdString`, and the SpecBarcode sheet keeps
+only the first prefix row of a service. To let an existing service accept more
+prefixes with the same barcode layout, list them in `ExtraSchemeIdStrings`:
 
 ```json
-"<new id>": { "AccountCode": "52043", "PostingAccount": "52043" }
+"52043": { "ExtraSchemeIdStrings": ["010753700001700"] }
 ```
+
+Each extra prefix is emitted as a hidden scheme copy (`52043_2`, …) with
+`AllowInvokeList:0` and the same SchemeName, AccountCode, fields, postings,
+derived data and barcode parsing. No sheet changes are needed.
 
 ## Fidelity notes (hard-won, do not "simplify")
 - Output: UTF-8 **with BOM**, **LF** line endings

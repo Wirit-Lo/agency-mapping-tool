@@ -89,6 +89,9 @@ class AgencyRawData(BaseModel):
     Type: Optional[str] = None
     AgencyProviderName: Optional[str] = None
     WorkflowId: Optional[str] = None
+    # Local, version-controlled exception: additional barcode prefixes accepted
+    # by this same service (serialized as hidden <id>_2, <id>_3… scheme copies).
+    ExtraSchemeIdStrings: list[str] = Field(default_factory=list)
     # Local, version-controlled exception. When true the serializer emits a
     # full <service>_Actual copy in addition to the normal scheme object.
     EmitActualCopy: bool = False

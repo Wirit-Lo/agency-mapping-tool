@@ -199,6 +199,14 @@ def serialize_agency_scheme(d: AgencyRawData) -> list[str]:
             f"{start_date}{end_date}{availability}{provider}"
         )
         lines.append(obj(f"{d.ObjectId}_Actual", actual_body))
+    # Extra barcode prefixes for the SAME service: a scheme matches a single
+    # SchemeIdString, so each extra prefix gets a hidden copy (<id>_2, <id>_3…)
+    # with the same SchemeName/AccountCode/fields/postings/barcode parsing.
+    for n, prefix in enumerate(d.ExtraSchemeIdStrings, start=2):
+        extra_body = body.replace(
+            f"<AllowInvokeList:{d.AllowInvokeList}>", "<AllowInvokeList:0>", 1
+        ).replace(f"<SchemeIdString:{d.SchemeIdString}>", f"<SchemeIdString:{prefix}>", 1)
+        lines.append(obj(f"{d.ObjectId}_{n}", extra_body))
     return lines
 
 

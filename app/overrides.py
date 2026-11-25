@@ -17,12 +17,8 @@ _ALLOWED_FIELDS = {
     "SchemeIdStart",
     "SchemeIdString",
     "EmitActualCopy",
-    "AccountCode",
+    "ExtraSchemeIdStrings",
 }
-
-# Not an AgencyRawData attribute: redirects the main (Amount) posting to another
-# account, e.g. a second barcode prefix whose money belongs to an existing service.
-_POSTING_ACCOUNT = "PostingAccount"
 
 
 def apply_agency_scheme_overrides(agency_data, path: str = _DEFAULT_PATH) -> list[str]:
@@ -39,7 +35,7 @@ def apply_agency_scheme_overrides(agency_data, path: str = _DEFAULT_PATH) -> lis
     for service_id, values in overrides.items():
         if not isinstance(values, dict):
             raise ValueError(f"Agency scheme override {service_id} must be an object.")
-        unknown = set(values) - _ALLOWED_FIELDS - {_POSTING_ACCOUNT}
+        unknown = set(values) - _ALLOWED_FIELDS
         if unknown:
             raise ValueError(f"Unsupported override fields for {service_id}: {sorted(unknown)}")
         # A source snapshot may legitimately contain only a subset of services.
@@ -47,11 +43,6 @@ def apply_agency_scheme_overrides(agency_data, path: str = _DEFAULT_PATH) -> lis
             continue
         agency = by_id[service_id]
         for field, value in values.items():
-            if field == _POSTING_ACCOUNT:
-                for posting in agency.PostingData:
-                    if posting.Attribute == "Amount":
-                        posting.Account = value
-            else:
-                setattr(agency, field, value)
+            setattr(agency, field, value)
         applied.append(service_id)
     return applied
