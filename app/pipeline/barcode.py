@@ -33,6 +33,14 @@ def _get_required_from_provider(service_id: int, providers: list[ServiceProvider
     return "1"
 
 
+def _get_prompt_from_provider(service_id: int, providers: list[ServiceProviderRawData],
+                              default: str) -> str:
+    p = next((e for e in providers if to_int(e.ObjectId) == service_id), None)
+    if p is not None and p.BarcodePrompt:
+        return p.BarcodePrompt
+    return default
+
+
 def _extract_barcode_by_sheet(grid, cfg_as, cfg_bd, cfg_bpd,
                               master, agency_data, barcode_data, providers) -> None:
     master_ids = {m.ObjectId for m in master}
@@ -85,7 +93,7 @@ def _extract_barcode_by_sheet(grid, cfg_as, cfg_bd, cfg_bpd,
                     MaxLength=max_length,
                     Name=bd_name,
                     ParsingRules=[],
-                    Prompt=cfg_bd["Prompt"],
+                    Prompt=_get_prompt_from_provider(service_id, providers, cfg_bd["Prompt"]),
                     Required=to_int(required),
                     CheckDigitName="",
                     ImpulseName="",

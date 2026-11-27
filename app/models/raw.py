@@ -139,6 +139,7 @@ class ServiceProviderRawData(BaseModel):
     Type: str = ""
     WorkflowId: str = ""
     BarcodeRequired: str = ""
+    BarcodePrompt: str = ""
 
 
 class DropdownValueRawData(BaseModel):

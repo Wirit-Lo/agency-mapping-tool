@@ -472,7 +472,7 @@ def _service_config_rows_to_main_rows(draft: dict[str, Any]) -> dict[str, dict[s
         if str(line).strip():
             receipt_rows.append([f"{service_id} : {service_name}", pf_fmt_id, 9 + index, 2, index, "NULL", 1, str(line), "NULL", "NULL", "NULL", "NULL"])
 
-    provider_rows = [[service_id, "SBA", "", "", 1, "Added from ServiceConfig"]]
+    provider_rows = [[service_id, "SBA", "", "", 1, "", "Added from ServiceConfig"]]
     map_rows = [[agent_code, agent_name, service_id]]
     return {
         "StatSUM": {"filename": "PayAtPost-StatSUM_Master_V1.2.xlsx", "sheet": "Main", "service_col": 1, "rows": [stat_row]},

@@ -47,7 +47,7 @@ Serializers (8 ตัว ใช้ format template ตรงจาก Consts.cs)
 | Loader | Sheet | RowStart | หมายเหตุ |
 |---|---|---|---|
 | DerivedDataRequirements | AgencyDerivedDataRequirements | 2 | Id=1, Attribute=3, SourceField=4, Formula=5 |
-| ServiceProviders | AgencyServiceProviders | 2 | Id=1, Type=2, ProviderName=3, WorkflowId=4, BarcodeRequired=5 |
+| ServiceProviders | AgencyServiceProviders | 2 | Id=1, Type=2, ProviderName=3, WorkflowId=4, BarcodeRequired=5, BarcodePrompt=6 (อ่านเฉพาะเมื่อหัวคอลัมน์ = `Barcode prompt`; ว่าง → ใช้ `Prompt` จาก config = `Scan Barcode`) |
 | DropdownValue | PayAtPost-DropdownValue | 2 | Id=2, DropdownId=3, Caption=4, Name=5, FieldName=6, DerivedData=8, SourceField=9 |
 | DefaultValue | PayAtPost-DefaultValue_V1.0 | 2 | Id=1, DefaultValue=4, ReferenceField=5 |
 | ConfigReceipt | PayAtPost-ConfigReceipt_V1.0 | 4 | grouped by service (col1) |

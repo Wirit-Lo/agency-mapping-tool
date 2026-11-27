@@ -175,6 +175,9 @@ def load_derived_data_requirements(path: str) -> list[DerivedDataRequirementsRaw
 
 def load_service_providers(path: str) -> list[ServiceProviderRawData]:
     grid = _load_grid(path)
+    # Column 6 is read only when its header is "Barcode prompt"; older sheets
+    # keep Notes there, which must never leak into the scan-screen prompt.
+    has_prompt_col = _cell(grid, 1, 6).strip().lower() == "barcode prompt"
     out: list[ServiceProviderRawData] = []
     for i in range(2, len(grid) + 1):
         object_id = _cell(grid, i, 1)
@@ -188,6 +191,7 @@ def load_service_providers(path: str) -> list[ServiceProviderRawData]:
             ProviderName=_cell(grid, i, 3),
             WorkflowId=_cell(grid, i, 4),
             BarcodeRequired=_cell(grid, i, 5),
+            BarcodePrompt=_cell(grid, i, 6).strip() if has_prompt_col else "",
         ))
     return out
 
